@@ -1,0 +1,270 @@
+/* ============================================ */
+/* SphericalGallery — Scroll-driven 3D Ring     */
+/* ============================================ */
+
+/* ---- Section: 滚动容器 ---- */
+.sg-section {
+  position: relative;
+  background: transparent;
+}
+
+/* ---- Mobile 显示 / Desktop 隐藏 ---- */
+.sg-mobile {
+  display: block;
+}
+
+.sg-desktop {
+  display: none;
+}
+
+/* ---- Mobile 卡片列表 ---- */
+.sg-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px 24px 80px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.sg-mobile-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-card);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.sg-mobile-media {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  display: block;
+}
+
+.sg-mobile-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sg-mobile-label {
+  padding: 14px 18px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.03em;
+}
+
+/* ============================================ */
+/* Desktop: scroll-driven 3D ring               */
+/* ============================================ */
+@media (min-width: 769px) {
+  .sg-mobile {
+    display: none;
+  }
+
+  .sg-desktop {
+    display: block;
+  }
+
+  /* ---- Fixed 内层 ---- */
+  .sg-inner {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate3d(
+      0,
+      calc(var(--scroll-progress, 0) * -12%),
+      0
+    );
+    will-change: transform;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .sg-section.is-active .sg-inner {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ---- 标题 WORKS ---- */
+  .sg-title {
+    position: absolute;
+    top: 6%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(5rem, 14vw, 12rem);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+    display: flex;
+    gap: 0.04em;
+    line-height: 1;
+  }
+
+  /* ---- 单个字母散射 ---- */
+  .sg-letter {
+    display: inline-block;
+    will-change: transform, opacity;
+    /*
+     * --head: 随 scroll-progress 从 -1 到 1
+     * 当 scroll-progress = 0.5 时 head = 0（字母聚合）
+     * 当 scroll-progress = 0 或 1 时 head = ±1（字母散射）
+     */
+    --head: calc(clamp(-1, (var(--scroll-progress, 0) - 0.5) * -2, 1));
+    --ahead: calc(var(--head) * var(--head));
+    --offset: calc((var(--li) - var(--lt) * 0.5) / var(--lt));
+    transform: translate3d(
+      calc(var(--head) * 45vw * var(--offset)),
+      calc(var(--head) * -35vh + var(--li) * 2vh),
+      0
+    );
+    opacity: calc(1 - var(--ahead) * 0.65);
+    transition: none;
+  }
+
+  /* ---- 3D 场景 ---- */
+  .sg-scene {
+    position: absolute;
+    inset: 0;
+    perspective: 40rem;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
+
+  /* ---- 作品卡片 ---- */
+  .sg-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 240px;
+    height: 160px;
+    margin-left: -120px;
+    margin-top: -80px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    border-radius: 14px;
+    overflow: hidden;
+    will-change: transform, opacity, filter;
+    content-visibility: auto;
+
+    /*
+     * --raw  : 原始进度（可能 < 0 或 > 1）
+     * --progress : 钳制到 [0, 1]
+     *
+     * 当 scroll-progress * N ≈ i 时，该卡片处于"焦点区"
+     */
+    --raw: calc(var(--scroll-progress, 0) * var(--n) - var(--i));
+    --progress: clamp(0, var(--raw), 1);
+    --sq: calc(var(--progress) * var(--progress));
+
+    /* 核心 3D 变换公式 */
+    transform:
+      rotateY(calc(var(--progress) * -20deg))
+      translate3d(
+        calc(var(--progress) * (50vw + 100%) - 50%),
+        calc(var(--y) * 50% - 50%),
+        calc(var(--sq) * -5rem)
+      )
+      scale(var(--size));
+
+    /* 景深：非焦点卡片降低 opacity 并加 blur */
+    opacity: clamp(0.2, var(--progress), 1);
+    filter: blur(calc(clamp(0, 1 - var(--progress), 1) * 3px));
+  }
+
+  /* ---- 卡片内部 ---- */
+  .sg-card-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .sg-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sg-card-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(
+      ellipse at 30% 20%,
+      rgba(255, 255, 255, 0.15) 0%,
+      transparent 55%
+    );
+    pointer-events: none;
+  }
+
+  .sg-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    z-index: 1;
+    color: #fff;
+  }
+
+  .sg-card-number {
+    font-size: 0.6rem;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-top: 2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    z-index: 1;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* ---- 导航指示器 ---- */
+  .sg-nav {
+    position: absolute;
+    bottom: 6%;
+    right: 8%;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.3);
+    z-index: 10;
+    user-select: none;
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+  }
+
+  .sg-nav-current {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .sg-nav-sep {
+    margin: 0 0.3em;
+    opacity: 0.35;
+    font-size: 0.8rem;
+    line-height: 1;
+  }
+
+  .sg-nav-total {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    line-height: 1;
+  }
+}

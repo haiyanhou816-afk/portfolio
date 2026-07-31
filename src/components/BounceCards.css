@@ -1,0 +1,41 @@
+.bounce-cards {
+  position: relative;
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.bounce-cards__card {
+  position: absolute;
+  width: clamp(125px, 16vw, 205px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 2px solid var(--section-visual-muted);
+  border-radius: 1.15rem;
+  background: var(--section-visual-card);
+  box-shadow: var(--card-shadow-hover);
+  cursor: pointer;
+  transform-origin: 50% 110%;
+  will-change: transform;
+  contain: paint;
+}
+
+.bounce-cards__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translateZ(0);
+  transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+}
+
+.bounce-cards__card:hover .bounce-cards__image {
+  transform: translateZ(0) scale(1.045);
+}
+
+@media (max-width: 760px) {
+  .bounce-cards {
+    transform: scale(.78);
+    transform-origin: center center;
+  }
+}
