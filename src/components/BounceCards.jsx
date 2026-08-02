@@ -271,11 +271,19 @@ export default function BounceCards({
     >
       {images.map((source, index) => {
         const label = cardLabels[index];
-        const clickable = typeof onCardClick === "function";
+        /*
+         * source 为空表示这个位置还没有作品。
+         * 仍然渲染一张卡片，堆叠的姿态、推开手感、卡片数量都保持不变，
+         * 只是内容换成占位文案，且不接受点击。
+         */
+        const placeholder = !source;
+        const clickable = typeof onCardClick === "function" && !placeholder;
         return (
           <div
-            key={`${source}-${index}`}
-            className={`bounce-cards__card bounce-cards__card-${index}`}
+            key={`${source ?? "placeholder"}-${index}`}
+            className={`bounce-cards__card bounce-cards__card-${index}${
+              placeholder ? " bounce-cards__card--placeholder" : ""
+            }`}
             ref={(element) => {
               cardRefs.current[index] = element;
             }}
@@ -294,13 +302,17 @@ export default function BounceCards({
                 }
               : {})}
           >
-            <img
-              className="bounce-cards__image"
-              src={source}
-              alt={label ?? ""}
-              decoding="async"
-              loading="lazy"
-            />
+            {placeholder ? (
+              <span className="bounce-cards__placeholder">{label}</span>
+            ) : (
+              <img
+                className="bounce-cards__image"
+                src={source}
+                alt={label ?? ""}
+                decoding="async"
+                loading="lazy"
+              />
+            )}
           </div>
         );
       })}

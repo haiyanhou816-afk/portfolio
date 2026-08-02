@@ -59,3 +59,27 @@
     transform-origin: center center;
   }
 }
+
+/*
+ * 占位卡片：还没有对应作品的位置。
+ * 保持和真实卡片一样的尺寸与堆叠姿态，只把内容换成文案，
+ * 视觉上退一层（虚线描边 + 更低的对比度），不抢真实作品的注意力。
+ */
+.bounce-cards__card--placeholder {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+
+.bounce-cards__placeholder {
+  padding: 0 1rem;
+  color: var(--section-visual-muted);
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 1.1vw, 12px);
+  letter-spacing: .18em;
+  text-align: center;
+  text-transform: uppercase;
+}

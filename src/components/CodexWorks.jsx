@@ -12,12 +12,31 @@ const stackTransforms = [
   "rotate(5deg) translate(176px)",
 ];
 
+/*
+ * 卡片堆叠固定 5 张。已完成的作品从中间往两侧排，
+ * 剩下的位置用"敬请期待"占位卡补齐 —— 保留原本的堆叠与推开手感，
+ * 同时不拿别人的参考图充数。
+ */
+const CENTER_FIRST_ORDER = [2, 1, 3, 0, 4];
+
+function buildStack(works) {
+  const slots = new Array(stackTransforms.length).fill(null);
+  works.slice(0, stackTransforms.length).forEach((work, index) => {
+    slots[CENTER_FIRST_ORDER[index]] = work;
+  });
+  return slots;
+}
+
 export default function CodexWorks({ lang }) {
   const z = lang === "zh";
   const [selected, setSelected] = useState(null);
 
-  const stackImages = codexWorks.map((w) => w.cover);
-  const cardLabels = codexWorks.map((w) => (z ? w.titleZh : w.titleEn));
+  const slots = buildStack(codexWorks);
+  const upcomingLabel = z ? "敬请期待" : "Coming Soon";
+  const stackImages = slots.map((work) => work?.cover ?? null);
+  const cardLabels = slots.map((work) =>
+    work ? (z ? work.titleZh : work.titleEn) : upcomingLabel,
+  );
 
   return (
     <>
@@ -48,7 +67,10 @@ export default function CodexWorks({ lang }) {
           transformStyles={stackTransforms}
           enableHover
           cardLabels={cardLabels}
-          onCardClick={(index) => setSelected(codexWorks[index])}
+          onCardClick={(index) => {
+            const work = slots[index];
+            if (work) setSelected(work);
+          }}
         />
         {/* 底部操作提示 */}
         <p className="codex-bounce-section__hint">

@@ -82,44 +82,19 @@ export default function InspirationGallery({ onBack }) {
 
   const initializedRef = useRef(false);
 
+  /*
+   * 灵感库只读本地 IndexedDB。
+   * 原来这里会 fetch /inspiration/manifest.json 预载一批图片，
+   * 但那些图来自 Dribbble / 站酷 / 花瓣，不是本人作品，
+   * 随站点公开发布并不合适，所以预设图连同 public/inspiration 一起移除了。
+   * 需要用的时候自己拖拽或 Ctrl+V 粘贴即可，数据只留在本地浏览器。
+   */
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-
-    const init = async () => {
-      const list = await getAllImages();
-      if (list.length > 0) {
-        setImages(list);
-        return;
-      }
-      // 空库，从 manifest.json 加载预设图片
-      try {
-        const res = await fetch('/inspiration/manifest.json');
-        if (!res.ok) throw new Error('manifest not found');
-        const manifest = await res.json();
-        for (const item of manifest) {
-          try {
-            const imgRes = await fetch(`/inspiration/${item.file}`);
-            const blob = await imgRes.blob();
-            const dataUrl = await blobToDataUrl(blob);
-            await addImage({
-              description: item.description || `灵感 #${Date.now()}`,
-              tags: item.tags || ['灵感'],
-              dataUrl,
-              createdAt: new Date().toISOString(),
-              source: item.source || 'preset',
-            });
-          } catch (err) {
-            console.warn(`加载预设图片失败: ${item.file}`, err);
-          }
-        }
-        const updated = await getAllImages();
-        setImages(updated);
-      } catch (e) {
-        console.error('初始化预设图片失败:', e);
-      }
-    };
-    init();
+    getAllImages()
+      .then(setImages)
+      .catch((err) => console.error('读取本地灵感库失败:', err));
   }, []);
 
   // ---- 添加图片（统一入口） ----
