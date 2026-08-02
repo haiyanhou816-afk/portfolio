@@ -9,11 +9,39 @@ gsap.registerPlugin(ScrollTrigger);
 
 const WECHAT_ID = "IHuangHuaYu";
 const EMAIL = "haiyanhou816@gmail.com";
+const EMAIL_ALT = "3371133530@qq.com";
 /*
  * 手机号不写进源码：仓库是公开的，硬编码等于把号码交给爬虫和搜索引擎。
  * 需要展示时在本地 .env 配 VITE_CONTACT_PHONE，未配置就不渲染电话卡片。
  */
 const PHONE = import.meta.env.VITE_CONTACT_PHONE || "";
+
+/*
+ * mailto: 在没有配置邮件客户端的环境里会静默失败（点了没反应）。
+ * 这里先把地址写进剪贴板，再尝试唤起客户端；唤起失败就提示"已复制"，
+ * 用户至少拿到了地址，不会白点一次。
+ */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.setAttribute("readonly", "");
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(el);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
 
 /**
  * 联系方式默认以星号遮罩，悬停 / 聚焦时逐字"打字机"揭示，移开再逐字收回。
@@ -63,6 +91,8 @@ export default function Contact({ lang }) {
   const cardsRef = useRef({ list: [] });
   const setCardRef = (el, i) => { if (el) cardsRef.current.list[i] = el; };
   const [copied, setCopied] = useState(false);
+  // 邮件卡片 / CTA 点击后的临时反馈：null | { id, kind: "copied" | "opened" }
+  const [mailNotice, setMailNotice] = useState(null);
   // 当前被悬停 / 聚焦的卡片 id，驱动打字机揭示
   const [activeCard, setActiveCard] = useState(null);
 
@@ -133,6 +163,38 @@ export default function Contact({ lang }) {
       : "Hi Haiyan,\n\nI'm … and I'd love to discuss …\n\nLooking forward to hearing from you!"
   )}`;
 
+  const mailtoHrefAlt = `mailto:${EMAIL_ALT}?subject=${encodeURIComponent(
+    z ? "你好，我想与你合作" : "Hi, I'd love to connect"
+  )}&body=${encodeURIComponent(
+    z
+      ? "你好海岩，\n\n我是……\n\n我想和你聊聊……\n\n期待你的回复！"
+      : "Hi Haiyan,\n\nI'm … and I'd love to discuss …\n\nLooking forward to hearing from you!"
+  )}`;
+
+  /*
+   * 点邮箱卡片 / 底部 CTA 都走这里：先复制地址，再尝试唤起邮件客户端。
+   * 唤起成功页面会失焦（visibilitychange），此时不提示；
+   * 没反应说明环境没有 mailto handler，提示"地址已复制"，用户不会白点。
+   */
+  const handleMailClick = useCallback((event, { id, href, addr }) => {
+    event.preventDefault();
+
+    let left = false;
+    const markLeft = () => { left = true; };
+    window.addEventListener("blur", markLeft, { once: true });
+    document.addEventListener("visibilitychange", markLeft, { once: true });
+
+    copyText(addr);
+    window.location.href = href;
+
+    window.setTimeout(() => {
+      window.removeEventListener("blur", markLeft);
+      document.removeEventListener("visibilitychange", markLeft);
+      setMailNotice({ id, kind: left ? "opened" : "copied" });
+      window.setTimeout(() => setMailNotice(null), 2600);
+    }, 700);
+  }, []);
+
   const contactCards = [
     ...(PHONE
       ? [{
@@ -167,6 +229,17 @@ export default function Contact({ lang }) {
       descZh: "24小时内回复",
       descEn: "Reply within 24h",
       href: mailtoHref,
+      action: null,
+    },
+    {
+      id: "email-alt",
+      icon: <Mail size={20} />,
+      labelZh: "邮箱（QQ）",
+      labelEn: "Email (QQ)",
+      value: EMAIL_ALT,
+      descZh: "国内收件更稳",
+      descEn: "Better in mainland China",
+      href: mailtoHrefAlt,
       action: null,
     },
   ];
@@ -204,9 +277,16 @@ export default function Contact({ lang }) {
         </div>
 
         {/* Contact cards */}
-        <div className={`grid grid-cols-1 gap-6 max-w-4xl mx-auto mb-14 ${contactCards.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+        <div className={`grid grid-cols-1 gap-6 mx-auto mb-14 ${
+          contactCards.length >= 4
+            ? "max-w-5xl sm:grid-cols-2 lg:grid-cols-4"
+            : contactCards.length === 3
+              ? "max-w-4xl md:grid-cols-3"
+              : "max-w-4xl md:grid-cols-2"
+        }`}>
           {contactCards.map((item, i) => {
             const isWechat = item.id === "wechat";
+            const isMail = item.id === "email" || item.id === "email-alt";
             const Tag = item.href ? "a" : "button";
             const isActive = activeCard === item.id;
 
@@ -225,11 +305,15 @@ export default function Contact({ lang }) {
               setActiveCard((current) => (current === item.id ? null : current));
             const handleClick = (event) => {
               setActiveCard(item.id);
+              if (isMail) {
+                handleMailClick(event, { id: item.id, href: item.href, addr: item.value });
+                return;
+              }
               item.action?.(event);
             };
 
             const tagProps = item.href
-              ? { href: item.href, target: item.id === "email" ? "_self" : undefined, rel: "noopener noreferrer" }
+              ? { href: item.href, target: isMail ? "_self" : undefined, rel: "noopener noreferrer" }
               : { type: "button" };
 
             return (
@@ -301,6 +385,35 @@ export default function Contact({ lang }) {
                         )}
                       </AnimatePresence>
                     </div>
+                  ) : isMail ? (
+                    <div className="flex items-center justify-center gap-1.5 text-xs" style={{ color: "var(--text-dim)" }}>
+                      <AnimatePresence mode="wait">
+                        {mailNotice?.id === item.id ? (
+                          <motion.span
+                            key="notice"
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="flex items-center gap-1"
+                            style={{ color: "#4ade80" }}
+                          >
+                            <Check size={12} />
+                            {mailNotice.kind === "opened"
+                              ? (z ? "已打开邮件客户端" : "Mail app opened")
+                              : (z ? "地址已复制，可直接粘贴" : "Address copied — paste it anywhere")}
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="desc"
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                          >
+                            {z ? item.descZh : item.descEn}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   ) : (
                     <div className="text-xs" style={{ color: "var(--text-dim)" }}>
                       {z ? item.descZh : item.descEn}
@@ -316,6 +429,9 @@ export default function Contact({ lang }) {
         <div className="text-center">
           <motion.a
             href={mailtoHref}
+            onClick={(event) =>
+              handleMailClick(event, { id: "cta", href: mailtoHref, addr: EMAIL })
+            }
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full border border-white/[0.25] bg-white/[0.04] text-sm font-medium transition-all duration-300 hover:border-white/[0.45] hover:bg-white/[0.08]"
@@ -324,6 +440,39 @@ export default function Contact({ lang }) {
             <span>{z ? "发送邮件" : "Send an Email"}</span>
             <ArrowUpRight size={16} strokeWidth={1.8} />
           </motion.a>
+
+          <div className="mt-4 min-h-[20px] text-xs" style={{ color: "var(--text-dim)" }}>
+            <AnimatePresence mode="wait">
+              {mailNotice?.id === "cta" ? (
+                <motion.span
+                  key="cta-notice"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="inline-flex items-center gap-1"
+                  style={{ color: "#4ade80" }}
+                >
+                  <Check size={12} />
+                  {mailNotice.kind === "opened"
+                    ? (z ? "已打开邮件客户端" : "Mail app opened")
+                    : (z
+                        ? `没检测到邮件客户端，已复制 ${EMAIL}`
+                        : `No mail app detected — copied ${EMAIL}`)}
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="cta-hint"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {z
+                    ? `或直接写信到 ${EMAIL} / ${EMAIL_ALT}`
+                    : `Or write to ${EMAIL} / ${EMAIL_ALT}`}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Brand marquee strip */}
