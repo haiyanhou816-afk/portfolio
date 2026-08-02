@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .env
 .env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +28,6 @@ dist-ssr
 
 # 备份与临时副本
 *.bak
+
+# internal working notes
+HANDOFF.md

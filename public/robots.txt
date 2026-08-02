@@ -1,0 +1,27 @@
+# 常规搜索引擎：允许收录页面，但不抓取作品图目录
+User-agent: *
+Allow: /
+Disallow: /images/
+
+# 图片专用爬虫
+User-agent: Googlebot-Image
+Disallow: /
+
+# AI 训练数据采集
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
