@@ -1,9 +1,10 @@
+import { asset } from "../utils/asset";
 import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 
 const API_BASE = import.meta.env.DEV ? 'http://localhost:8765' : '';
-const DOG_IMAGE = '/folder-pet.png';
+const DOG_IMAGE = asset('/folder-pet.png');
 
 export default function DesktopPet({ onBack }) {
   const containerRef = useRef(null);

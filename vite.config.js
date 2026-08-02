@@ -62,6 +62,9 @@ function agnesProxyMiddleware(env) {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
+    // 部署到 GitHub Pages 项目站点时资源在 /portfolio/ 下，
+    // 通过 VITE_BASE 覆盖（自定义域名或根路径部署时设为 '/'）。
+    base: env.VITE_BASE || '/',
     plugins: [react(), { name: 'agnes-proxy', configureServer(server) { server.middlewares.use(agnesProxyMiddleware(env)); } }],
     css: { modules: { localsConvention: 'camelCase' } },
   };

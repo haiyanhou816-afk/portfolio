@@ -3,7 +3,14 @@
  * 通过 Vite proxy 发送请求，API Key 在后端中间件注入
  */
 
-const API_BASE = '/api/analyze';
+/**
+ * 分析接口地址。
+ *
+ * 默认走 Vite dev server 的 /api/analyze 中间件（API Key 在服务端注入）。
+ * 静态部署（如 GitHub Pages）没有这个后端，此时可用 VITE_ANALYZE_API
+ * 指向自建代理；未配置则视为功能不可用，直接给出明确提示。
+ */
+const API_BASE = import.meta.env.VITE_ANALYZE_API || (import.meta.env.DEV ? '/api/analyze' : '');
 
 const PROMPT_TEMPLATE = `请按以下 6 个维度详细分析这张设计稿：
 
@@ -57,6 +64,10 @@ function compressImage(file, maxSizeMB = 2) {
 
 export async function analyzeDesign(imageFile, onChunk, onError, onDone) {
   try {
+    if (!API_BASE) {
+      throw new Error('当前为静态部署，AI 分析功能需要后端代理支持。请在本地运行 npm run dev 体验，或配置 VITE_ANALYZE_API。');
+    }
+
     const base64 = await compressImage(imageFile);
     const base64Data = base64.split(',')[1];
 

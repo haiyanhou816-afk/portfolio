@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { asset } from '../utils/asset';
 
 const STYLE = `*, *::before, *::after { cursor: none !important; }`;
 
@@ -62,7 +63,7 @@ export default function CustomCursor() {
           left: 0,
           width: 32,
           height: 32,
-          background: 'url(/cursor-hand-32.png) no-repeat center/contain',
+          background: `url(${asset('/cursor-hand-32.png')}) no-repeat center/contain`,
           pointerEvents: 'none',
           zIndex: 99999,
           willChange: 'transform',

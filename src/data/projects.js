@@ -7,7 +7,9 @@
  *         并自动取 images/work/thumbs/ 下的同名缩略图，
  *         所以这里只写全尺寸路径即可。
  */
-export const projects = [
+import { asset } from "../utils/asset";
+
+const rawProjects = [
   {
     id: "shengtian-ad-delivery",
     titleZh: "游戏广告 · 投放视觉",
@@ -171,6 +173,13 @@ export const projects = [
   },
 ];
 
+/** 统一给 public/ 资源补上 BASE_URL，便于部署到子路径 */
+export const projects = rawProjects.map((project) => ({
+  ...project,
+  cover: asset(project.cover),
+  images: project.images.map(asset),
+}));
+
 /**
  * 精选项目网格用的 28 格。
  * 轮转取图：每轮从各项目各取一张，让相邻格子来自不同项目 ——
@@ -195,4 +204,4 @@ export const featuredGridSlots = (() => {
 })();
 
 /** 全尺寸图 → 同名缩略图（网格只需要缩略图，避免首屏拉 20MB） */
-export const thumbFor = (src) => src.replace("/images/work/", "/images/work/thumbs/");
+export const thumbFor = (src) => src.replace("images/work/", "images/work/thumbs/");

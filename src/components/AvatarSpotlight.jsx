@@ -1,3 +1,4 @@
+import { asset } from "../utils/asset";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AsciiVignetteBloom from "./AsciiVignetteBloom";
 
@@ -14,7 +15,7 @@ import AsciiVignetteBloom from "./AsciiVignetteBloom";
  * ASCII canvas 常驻挂载而不是 hover 时才创建，避免每次进入都重新
  * 解码图片 + 重建离屏采样，那会有明显的一帧空白。
  */
-export default function AvatarSpotlight({ src = "/avatar.jpg", alt }) {
+export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt }) {
   const wrapRef = useRef(null);
   const rafRef = useRef(0);
   const pendingRef = useRef(null);

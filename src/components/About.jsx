@@ -6,6 +6,7 @@ import { GraduationCap, Award, Building2, Briefcase } from "lucide-react";
 import PixelSnow from "./PixelSnow";
 import LogoLoop from "./LogoLoop";
 import AvatarSpotlight from "./AvatarSpotlight";
+import { asset } from "../utils/asset";
 import ExperienceTimeline from "./ExperienceTimeline";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -53,15 +54,15 @@ const stats = [
 ];
 
 const aboutLogoItems = [
-  { src: "/logos/about/illustrator.png", alt: "Illustrator" },
-  { src: "/logos/about/after-effects.png", alt: "After Effects" },
-  { src: "/logos/about/photoshop.png", alt: "Photoshop" },
-  { src: "/logos/about/codex.png", alt: "Codex" },
-  { src: "/logos/about/blender.png", alt: "Blender" },
-  { src: "/logos/about/procreate.png", alt: "Procreate" },
-  { src: "/logos/about/tool-06.png", alt: "Design tool" },
-  { src: "/logos/about/cinema-4d.png", alt: "Cinema 4D" },
-  { src: "/logos/about/rhino.png", alt: "Rhino" },
+  { src: asset("/logos/about/illustrator.png"), alt: "Illustrator" },
+  { src: asset("/logos/about/after-effects.png"), alt: "After Effects" },
+  { src: asset("/logos/about/photoshop.png"), alt: "Photoshop" },
+  { src: asset("/logos/about/codex.png"), alt: "Codex" },
+  { src: asset("/logos/about/blender.png"), alt: "Blender" },
+  { src: asset("/logos/about/procreate.png"), alt: "Procreate" },
+  { src: asset("/logos/about/tool-06.png"), alt: "Design tool" },
+  { src: asset("/logos/about/cinema-4d.png"), alt: "Cinema 4D" },
+  { src: asset("/logos/about/rhino.png"), alt: "Rhino" },
 ];
 
 export default function About({ lang }) {
@@ -184,7 +185,7 @@ export default function About({ lang }) {
             {/* Avatar card */}
             <motion.div className="stat-card rounded-2xl overflow-hidden transition-all duration-300">
               <AvatarSpotlight
-                src="/avatar.jpg"
+                src={asset("/avatar.jpg")}
                 alt={z ? "侯海岩的照片" : "Portrait of Hou Haiyan"}
               />
             </motion.div>

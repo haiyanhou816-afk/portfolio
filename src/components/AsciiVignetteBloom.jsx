@@ -1,3 +1,4 @@
+import { asset } from "../utils/asset";
 import { useEffect, useRef } from "react";
 
 /**
@@ -126,7 +127,7 @@ function animOffset(style, cx, cy, cols, rows, t, amp) {
 }
 
 export default function AsciiVignetteBloom({
-  src = "/hero-bg.jpg",
+  src = asset("/hero-bg.jpg"),
   className = "",
   config,
   bgColor = "#0a0a0a",

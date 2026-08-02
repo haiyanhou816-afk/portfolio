@@ -2,7 +2,9 @@
  * AI 协作作品数据 — 与 projects.js 结构保持一致，
  * 这样可以直接复用 <ProjectDetail /> 详情弹窗组件。
  */
-export const codexWorks = [
+import { asset } from "../utils/asset";
+
+const rawCodexWorks = [
   {
     id: "codex-portfolio-2026",
     titleZh: "作品集网站 2.0",
@@ -20,3 +22,10 @@ export const codexWorks = [
     images: [],
   },
 ];
+
+/** 统一给 public/ 资源补上 BASE_URL，便于部署到子路径 */
+export const codexWorks = rawCodexWorks.map((work) => ({
+  ...work,
+  cover: asset(work.cover),
+  images: work.images.map(asset),
+}));

@@ -1,3 +1,4 @@
+import { asset } from "../utils/asset";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import AsciiVignetteBloom from "./AsciiVignetteBloom";
@@ -36,7 +37,7 @@ export default function LoadingScreen({ onComplete }) {
       }
     };
     image.onerror = markImageReady;
-    image.src = "/hero-bg.jpg";
+    image.src = asset("/hero-bg.jpg");
 
     const tick = (now) => {
       const elapsed = Math.min((now - startedAt) / minDuration, 1);
@@ -90,7 +91,7 @@ export default function LoadingScreen({ onComplete }) {
       <div className="loading-ascii" aria-hidden="true">
         <AsciiVignetteBloom
           className="loading-ascii__canvas"
-          src="/hero-bg.jpg"
+          src={asset("/hero-bg.jpg")}
           bgColor="transparent"
           edgeFade={0.42}
           /* 网格随进度逐格铺开，在 78% 处就铺满，留一段完整形态给用户看 */

@@ -1,3 +1,4 @@
+import { asset } from "../utils/asset";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
@@ -80,7 +81,7 @@ export default function Hero({ lang, theme, intro = false, pending = false }) {
       <div className="hero-ascii" aria-hidden="true">
         <AsciiVignetteBloom
           className="hero-ascii__canvas"
-          src="/hero-bg.jpg"
+          src={asset("/hero-bg.jpg")}
           bgColor="transparent"
           edgeFade={0.3}
           reveal={reveal < 1 ? reveal : null}
