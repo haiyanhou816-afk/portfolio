@@ -9,7 +9,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 const WECHAT_ID = "IHuangHuaYu";
 const EMAIL = "haiyanhou816@gmail.com";
-const PHONE = "<REDACTED>";
+/*
+ * 手机号不写进源码：仓库是公开的，硬编码等于把号码交给爬虫和搜索引擎。
+ * 需要展示时在本地 .env 配 VITE_CONTACT_PHONE，未配置就不渲染电话卡片。
+ */
+const PHONE = import.meta.env.VITE_CONTACT_PHONE || "";
 
 /**
  * 联系方式默认以星号遮罩，悬停 / 聚焦时逐字"打字机"揭示，移开再逐字收回。
@@ -130,17 +134,19 @@ export default function Contact({ lang }) {
   )}`;
 
   const contactCards = [
-    {
-      id: "phone",
-      icon: <Phone size={20} />,
-      labelZh: "电话",
-      labelEn: "Phone",
-      value: PHONE,
-      descZh: "随时拨打",
-      descEn: "Call anytime",
-      href: `tel:${PHONE}`,
-      action: null,
-    },
+    ...(PHONE
+      ? [{
+          id: "phone",
+          icon: <Phone size={20} />,
+          labelZh: "电话",
+          labelEn: "Phone",
+          value: PHONE,
+          descZh: "随时拨打",
+          descEn: "Call anytime",
+          href: `tel:${PHONE}`,
+          action: null,
+        }]
+      : []),
     {
       id: "wechat",
       icon: <MessageCircle size={20} />,
@@ -198,7 +204,7 @@ export default function Contact({ lang }) {
         </div>
 
         {/* Contact cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-14">
+        <div className={`grid grid-cols-1 gap-6 max-w-4xl mx-auto mb-14 ${contactCards.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
           {contactCards.map((item, i) => {
             const isWechat = item.id === "wechat";
             const Tag = item.href ? "a" : "button";
