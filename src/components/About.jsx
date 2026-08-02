@@ -1,42 +1,55 @@
 import { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useInView, animate } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { GraduationCap, Award, Building2, Briefcase } from "lucide-react";
 import PixelSnow from "./PixelSnow";
 import LogoLoop from "./LogoLoop";
+import AvatarSpotlight from "./AvatarSpotlight";
+import ExperienceTimeline from "./ExperienceTimeline";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// 数字滚动 counter 子组件
+function StatCounter({ value }) {
+  // value 形如 "3+" "30+" "15+" "10+"
+  const numMatch = value.match(/^(\d+)(.*)/);
+  const numPart = numMatch ? parseInt(numMatch[1], 10) : 0;
+  const suffix = numMatch ? numMatch[2] : value;
+
+  const spanRef = useRef(null);
+  const inViewRef = useRef(null);
+  const inView = useInView(inViewRef, { once: true, margin: "-10% 0px" });
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (inView && !hasAnimated.current && spanRef.current) {
+      hasAnimated.current = true;
+      animate(0, numPart, {
+        duration: 1.4,
+        ease: [0.22, 1, 0.36, 1],
+        onUpdate(v) {
+          if (spanRef.current) {
+            spanRef.current.textContent = Math.round(v) + suffix;
+          }
+        },
+      });
+    }
+  }, [inView, numPart, suffix]);
+
+  return (
+    <span ref={inViewRef} style={{ display: "inline-block" }}>
+      <span ref={spanRef}>0{suffix}</span>
+    </span>
+  );
+}
+
 
 const stats = [
   { icon: <Briefcase size={20} />, value: "3+", labelKeyZh: "实习经历", labelKeyEn: "Internships" },
   { icon: <Building2 size={20} />, value: "30+", labelKeyZh: "项目经验", labelKeyEn: "Projects" },
   { icon: <GraduationCap size={20} />, value: "15+", labelKeyZh: "专业技能", labelKeyEn: "Skills" },
-  { icon: <Award size={20} />, value: "10+", labelKeyZh: "设计工具", labelKeyEn: "Awards" },
-];
-
-const experiences = [
-  {
-    companyZh: "武汉微派网络科技有限公司", companyEn: "Wuhan Weipai Network Technology",
-    roleZh: "UI / 视觉设计实习生", roleEn: "UI / Visual Design Intern",
-    period: "2024",
-    descZh: "参与《贪吃蛇大作战》项目，负责游戏UI、运营设计、多渠道适配。",
-    descEn: "Contributed to 'Snake Battle' project, responsible for game UI, operational design, and multi-platform adaptation."
-  },
-  {
-    companyZh: "武汉盛天网络技术股份有限公司", companyEn: "Wuhan Shengtian Network Technology",
-    roleZh: "广告创意 / 品牌视觉", roleEn: "Ad Creative / Brand Visual",
-    period: "2024",
-    descZh: "广告创意设计、营销视觉设计、品牌宣传设计。",
-    descEn: "Advertising creative design, marketing visual design, and brand promotion design."
-  },
-  {
-    companyZh: "杭州迅鹰科技有限公司", companyEn: "Hangzhou Xunying Technology",
-    roleZh: "品牌视觉设计师", roleEn: "Brand Visual Designer",
-    period: "2023",
-    descZh: "品牌视觉设计、Banner/H5页面、活动海报、直播贴片设计。",
-    descEn: "Brand visual design, Banner/H5 pages, event posters, and live streaming overlay design."
-  },
+  { icon: <Award size={20} />, value: "10+", labelKeyZh: "设计工具", labelKeyEn: "Design Tools" },
 ];
 
 const aboutLogoItems = [
@@ -109,7 +122,9 @@ export default function About({ lang }) {
   const renderStat = (stat, i) => (
     <motion.div key={i} className="stat-card flex flex-col items-center p-6 rounded-xl transition-all duration-300">
       <div className="text-2xl mb-3">{stat.icon}</div>
-      <div className="text-lg font-bold mb-0.5" style={{ color: "var(--text-main)" }}>{stat.value}</div>
+      <div className="text-lg font-bold mb-0.5" style={{ color: "var(--text-main)" }}>
+        <StatCounter value={stat.value} />
+      </div>
       <div className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-dim)" }}>{z ? stat.labelKeyZh : stat.labelKeyEn}</div>
     </motion.div>
   );
@@ -127,11 +142,11 @@ export default function About({ lang }) {
           flakeSize={0.008}
           minFlakeSize={1}
           pixelResolution={380}
-          speed={0.58}
+          speed={0.30}
           depthFade={10}
           farPlane={18}
           brightness={0.46}
-          density={0.18}
+          density={0.06}
           variant="square"
           direction={118}
         />
@@ -163,45 +178,41 @@ export default function About({ lang }) {
           {stats.map((stat, i) => renderStat(stat, i))}
         </div>
 
-        {/* Left: Avatar + Timeline | Right: Experience cards */}
+        {/* Left: Avatar | Right: Experience timeline + Education */}
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
-          <div ref={leftColRef} className="lg:w-1/3 space-y-8">
+          <div ref={leftColRef} className="lg:w-1/3">
             {/* Avatar card */}
             <motion.div className="stat-card rounded-2xl overflow-hidden transition-all duration-300">
-              <div className="aspect-square bg-gradient-to-br from-gray-800 to-black dark:from-gray-100 dark:to-gray-200 flex items-center justify-center">
-                <div className="w-full h-full bg-cover bg-center rounded-2xl" style={{ backgroundImage: `url(/avatar.jpg)` }} />
-              </div>
+              <AvatarSpotlight
+                src="/avatar.jpg"
+                alt={z ? "侯海岩的照片" : "Portrait of Hou Haiyan"}
+              />
             </motion.div>
+          </div>
 
-            {/* Education & Honors */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold mb-4" style={{ color: "var(--text-main)" }}>{z ? "教育背景" : "Education"}</h3>
+          {/* Right: Work experience — 时间线，hover 打字机展开职责与成果 */}
+          <div ref={rightColRef} className="lg:w-2/3">
+            <div className="flex items-baseline justify-between mb-6">
+              <h3 className="text-xl font-bold" style={{ color: "var(--text-main)" }}>{z ? "工作经历" : "Experience"}</h3>
+              <span className="text-xs" style={{ color: "var(--text-dim)" }}>
+                {z ? "悬浮查看职责与成果" : "Hover to reveal details"}
+              </span>
+            </div>
+            <ExperienceTimeline lang={lang} />
+
+            {/* Education */}
+            <div className="mt-12 pt-10 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+              <h3 className="text-xl font-bold mb-6" style={{ color: "var(--text-main)" }}>{z ? "教育背景" : "Education"}</h3>
               {[
-                { schoolZh: "武汉工程大学", schoolEn: "Wuhan Institute of Technology", majorZh: "艺术设计学院产品设计专业", majorEn: "Product Design, School of Art & Design", years: "2023-2027" },
+                { schoolZh: "武汉工程大学", schoolEn: "Wuhan Institute of Technology", majorZh: "艺术设计学院产品设计专业", majorEn: "Product Design, School of Art & Design", years: "2023–2027" },
               ].map((edu, i) => (
-                <motion.div key={i} className="timeline-item relative">
+                <motion.div key={i} className="timeline-item relative pl-1">
                   <div className="font-semibold" style={{ color: "var(--text-main)" }}>{z ? edu.schoolZh : edu.schoolEn}</div>
-                  <div className="text-sm text-gray-400 mt-1">{z ? edu.majorZh : edu.majorEn}</div>
-                  <div className="text-xs font-medium text-gray-400 mt-1">{edu.years}</div>
+                  <div className="text-sm mt-1" style={{ color: "var(--text-sub)" }}>{z ? edu.majorZh : edu.majorEn}</div>
+                  <div className="text-xs font-medium mt-1" style={{ color: "var(--text-dim)" }}>{edu.years}</div>
                 </motion.div>
               ))}
             </div>
-          </div>
-
-          {/* Right: Work experience */}
-          <div ref={rightColRef} className="lg:w-2/3 space-y-8">
-            {experiences.map((exp, i) => (
-              <motion.div key={i} className="experience-card rounded-xl p-6 transition-all duration-300">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-bold" style={{ color: "var(--text-main)" }}>{z ? exp.companyZh : exp.companyEn}</div>
-                    <div className="text-sm text-gray-400 mt-1">{z ? exp.roleZh : exp.roleEn}</div>
-                  </div>
-                  <span className="text-xs font-medium text-gray-500">{exp.period}</span>
-                </div>
-                <p className="text-sm text-gray-400 leading-relaxed">{z ? exp.descZh : exp.descEn}</p>
-              </motion.div>
-            ))}
           </div>
         </div>
       </div>

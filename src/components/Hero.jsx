@@ -1,58 +1,73 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import AsciiVignetteBloom from "./AsciiVignetteBloom";
+import TextFollowCursor from "./TextFollowCursor";
 
-export default function Hero({ lang, theme }) {
+export default function Hero({ lang, theme, intro = false, pending = false }) {
   const heroRef = useRef(null);
   const curtainRef = useRef(null);
-  const titleRef = useRef(null);
-  const characterRefs = useRef([]);
   const [curtainOpen, setCurtainOpen] = useState(false);
+  /*
+   * Hero 在加载页背后就已经挂载，那时 intro 还是 false，
+   * 所以初值取 0（网格留白），等 intro 转 true 后再逐格点亮。
+   * 揭示跑完会置为 1，之后 reveal 传 null 表示完整呈现。
+   */
+  const [reveal, setReveal] = useState(0);
   const isDark = theme === "dark";
   const heroTitle = "portfolio";
 
-  const setPointer = useCallback((event) => {
-    const hero = heroRef.current;
-    if (!hero) return;
-
-    const bounds = hero.getBoundingClientRect();
-    hero.style.setProperty("--pointer-x", `${event.clientX - bounds.left}px`);
-    hero.style.setProperty("--pointer-y", `${event.clientY - bounds.top}px`);
-    hero.style.setProperty("--pointer-x-normalized", `${(event.clientX - bounds.left) / bounds.width}`);
-    hero.style.setProperty("--pointer-y-normalized", `${(event.clientY - bounds.top) / bounds.height}`);
-  }, []);
-
   useEffect(() => {
-    const reveal = window.setTimeout(() => setCurtainOpen(true), 120);
-    return () => window.clearTimeout(reveal);
+    const timer = window.setTimeout(() => setCurtainOpen(true), 120);
+    return () => window.clearTimeout(timer);
   }, []);
+
+  // 背景网格逐格点亮：一个一个方块亮起来，再落回完整效果
+  useEffect(() => {
+    /*
+     * pending 表示加载页还在，此时按兵不动，等它退场触发 intro。
+     * 兜底只针对"加载页被跳过、intro 也没来"的情况，
+     * 避免网格永远停在未揭示状态。
+     */
+    if (!intro) {
+      if (pending) return undefined;
+      const fallback = window.setTimeout(() => {
+        setReveal((current) => (current === 0 ? 1 : current));
+      }, 400);
+      return () => window.clearTimeout(fallback);
+    }
+
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    if (reduce) {
+      setReveal(1);
+      return undefined;
+    }
+
+    let rafId = 0;
+    let startedAt = 0;
+    const duration = 1400;
+
+    const step = (now) => {
+      if (!startedAt) startedAt = now;
+      const p = Math.min((now - startedAt) / duration, 1);
+      // easeOutCubic：开头密集亮起，收尾放缓
+      setReveal(1 - Math.pow(1 - p, 3));
+      if (p < 1) rafId = requestAnimationFrame(step);
+    };
+
+    // 等幕布开始拉开再启动，避免两段动画抢注意力
+    const delay = window.setTimeout(() => {
+      rafId = requestAnimationFrame(step);
+    }, 260);
+
+    return () => {
+      window.clearTimeout(delay);
+      cancelAnimationFrame(rafId);
+    };
+  }, [intro, pending]);
 
   const scrollToProjects = () => {
     document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleTitleMove = (event) => {
-    const title = titleRef.current;
-    if (!title) return;
-
-    const bounds = title.getBoundingClientRect();
-    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-
-    characterRefs.current.forEach((character, index) => {
-      const distanceFromCenter = index / (characterRefs.current.length - 1) - 0.5;
-      const twist = x * distanceFromCenter * 4.4 + y * 1.35;
-      character?.style.setProperty("--character-rotate", `${twist}deg`);
-    });
-  };
-
-  const resetTitle = () => {
-    const title = titleRef.current;
-    if (!title) return;
-
-    characterRefs.current.forEach((character) => {
-      character?.style.setProperty("--character-rotate", "0deg");
-    });
   };
 
   return (
@@ -60,11 +75,29 @@ export default function Hero({ lang, theme }) {
       ref={heroRef}
       id="hero"
       className={`portfolio-hero ${isDark ? "portfolio-hero--dark" : "portfolio-hero--light"}`}
-      onPointerMove={setPointer}
     >
       <div className="hero-grain" aria-hidden="true" />
-      <div className="hero-portrait-base" aria-hidden="true" />
-      <div className="hero-portrait-focus" aria-hidden="true" />
+      <div className="hero-ascii" aria-hidden="true">
+        <AsciiVignetteBloom
+          className="hero-ascii__canvas"
+          src="/hero-bg.jpg"
+          bgColor="transparent"
+          edgeFade={0.3}
+          reveal={reveal < 1 ? reveal : null}
+          config={{
+            bgMode: "none",
+            cellSize: 14,
+            brightness: isDark ? 6 : 20,
+            contrast: 118,
+            saturation: isDark ? 55 : 85,
+            pfx: {
+              vignette: { enabled: true, intensity: 46 },
+              bloom: { enabled: true, intensity: 22 },
+            },
+            animIntensity: { enabled: true, intensity: 42 },
+          }}
+        />
+      </div>
       <div className="hero-sun" aria-hidden="true" />
 
       <div className="hero-statusbar">
@@ -92,25 +125,16 @@ export default function Hero({ lang, theme }) {
           {lang === "zh" ? "视觉设计 / 品牌叙事 / AI 协作" : "VISUAL DESIGN / BRAND NARRATIVE / AI COLLABORATION"}
         </p>
 
-        <div
-          ref={titleRef}
-          className="portfolio-hero__title"
-          onPointerMove={handleTitleMove}
-          onPointerLeave={resetTitle}
-        >
-          <h1 aria-label="portfolio">
-            {heroTitle.split("").map((character, index) => (
-              <span
-                key={`${character}-${index}`}
-                className="portfolio-hero__character"
-                ref={(element) => {
-                  characterRefs.current[index] = element;
-                }}
-              >
-                {character}
-              </span>
-            ))}
-          </h1>
+        <div className="portfolio-hero__title">
+          <TextFollowCursor
+            text={heroTitle}
+            as="h1"
+            charClassName="portfolio-hero__character"
+            sunHeight={520}
+            ease={0.16}
+            radius={460}
+            perspective={620}
+          />
         </div>
 
         <div className="portfolio-hero__footer-copy">

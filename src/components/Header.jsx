@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon, Globe, Sparkles } from 'lucide-react';
+import { Menu, X, Globe, Sparkles } from 'lucide-react';
+import SunToggle from './SunToggle';
 
 const navIds = ['about', 'projects', 'hobbies', 'codex-works', 'strengths', 'contact'];
 
@@ -57,7 +58,7 @@ export default function Header({ lang, setLang, theme, setTheme, onNavigate, onI
             } px-5 py-2 shadow-lg`}>
               {/* Nav links */}
               {/* Logo */}
-              <span className={isDark ? 'text-[var(--text-main)]/70' : 'text-black/60'}>
+              <span className={`text-[11px] font-bold tracking-widest mr-2 ${isDark ? 'text-[var(--text-main)]/70' : 'text-black/60'}`}>
                 HOUHAIYAN
               </span>
               <div className="flex items-center gap-0.5">
@@ -113,7 +114,7 @@ export default function Header({ lang, setLang, theme, setTheme, onNavigate, onI
                   onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
                   className={`p-1.5 rounded-full transition-colors ${isDark ? 'text-[var(--text-sub)] hover:text-[var(--text-main)]' : 'text-[var(--text-dim)] hover:text-black'}`}
                 >
-                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                  <SunToggle lit={theme === 'light'} size={16} />
                 </motion.button>
               </div>
             </div>
@@ -187,7 +188,7 @@ export default function Header({ lang, setLang, theme, setTheme, onNavigate, onI
                   onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
                   className={`p-3 rounded-full ${isDark ? 'text-[var(--text-sub)]' : 'text-[var(--text-dim)]'}`}
                 >
-                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                  <SunToggle lit={theme === 'light'} size={20} />
                 </button>
               </div>
             </div>

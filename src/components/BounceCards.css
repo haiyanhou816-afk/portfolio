@@ -17,8 +17,18 @@
   box-shadow: var(--card-shadow-hover);
   cursor: pointer;
   transform-origin: 50% 110%;
-  will-change: transform;
+  /*
+   * 不用 will-change: transform 常驻 —— 5 张卡片会一直各占一层合成层，
+   * 滚到这一屏时浏览器要同时提升图层并解码图片，正是卡顿的叠加来源。
+   * translateZ(0) 已经足够让 GSAP 的变换走合成路径，代价更低。
+   */
+  transform: translateZ(0);
   contain: paint;
+}
+
+/* 只有真正要动的时候才申请图层，动完由 GSAP 移除 */
+.bounce-cards:hover .bounce-cards__card {
+  will-change: transform;
 }
 
 .bounce-cards__image {
@@ -26,11 +36,21 @@
   height: 100%;
   object-fit: cover;
   transform: translateZ(0);
-  transition: transform .35s cubic-bezier(.16, 1, .3, 1);
 }
 
-.bounce-cards__card:hover .bounce-cards__image {
-  transform: translateZ(0) scale(1.045);
+/*
+ * 这里刻意不做 :hover 缩放。所有形变都由 GSAP 统一施加：
+ *   1. 否则卡片与图片各缩放一次，实际叠成约 1.09，比预期夸张一倍
+ *   2. 更关键的是判定口径不同 —— GSAP 用的是指针到各卡片中心的连续距离，
+ *      每张卡片按距离拿到 0~1 的权重；CSS :hover 是非此即彼的布尔状态。
+ *      卡片旋转且互相重叠，两套判定经常不一致，会出现放大的卡片
+ *      和被推开的卡片错位。
+ * 交给 GSAP 一个来源，状态才不会打架。
+ */
+
+.bounce-cards__card:focus-visible {
+  outline: 2px solid var(--hero-red, #f64a35);
+  outline-offset: 3px;
 }
 
 @media (max-width: 760px) {

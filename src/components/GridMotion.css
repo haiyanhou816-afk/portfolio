@@ -54,6 +54,22 @@
   min-width: 0;
 }
 
+/* 可交互的格子才给出"能点"的信号，避免空白处也是 crosshair 误导用户 */
+.grid-motion__item--interactive {
+  cursor: pointer;
+  outline: none;
+}
+
+.grid-motion__item--interactive:focus-visible .grid-motion__item-inner {
+  border-color: var(--hero-red, #f64a35);
+  box-shadow: 0 0 0 2px var(--hero-red, #f64a35);
+}
+
+.grid-motion__item--interactive:focus-visible .grid-motion__item-image {
+  transform: scale(1.09);
+  filter: saturate(1.06) contrast(1.12) brightness(.94);
+}
+
 .grid-motion__item-inner {
   position: relative;
   display: flex;

@@ -70,7 +70,7 @@ export default function Skills({ lang }) {
     >
       <div className="container-content">
         <div ref={headerRef} className="mb-16 lg:mb-20">
-          <span className="text-sm font-medium tracking-wide uppercase mb-4 block text-gray-500">04 — {z ? "个人优势" : "Personal Strengths"}</span>
+          <span className="text-sm font-medium tracking-wide uppercase mb-4 block text-gray-500">05 — {z ? "个人优势" : "Personal Strengths"}</span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-[var(--text-main)]">{z ? "个人优势" : "Personal Strengths"}</h2>
           <p className="text-lg md:text-xl font-normal text-gray-500">{z ? "核心技能与专业能力" : "Core skills and professional expertise"}</p>
         </div>

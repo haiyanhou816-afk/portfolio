@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +6,8 @@
 
 /* ===== THEME VARIABLES — Pure Black & White ===== */
 :root, html[data-theme="dark"] {
-  --font-sans: "Amazon Ember", Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
-  --font-mono: "Amazon Ember", Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
   --bg-base: #000000;
   --bg-surface: #0a0a0a;
   --bg-card: rgba(15, 15, 15, 0.8);
@@ -39,8 +39,8 @@
 }
 
 html[data-theme="light"] {
-  --font-sans: "Amazon Ember", Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
-  --font-mono: "Amazon Ember", Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
   --bg-base: #ffffff;
   --bg-surface: #f5f5f5;
   --bg-card: rgba(255, 255, 255, 0.9);
@@ -69,6 +69,18 @@ html[data-theme="light"] {
   --loading-text: #171717;
   --loading-meta: rgba(23,23,23,.62);
   --loading-track: rgba(23,23,23,.22);
+}
+
+/* ============================================================
+   英文模式字族：Nunito
+   为什么按 lang 而不是全站换：Nunito 没有中文字形，中文会掉到
+   系统回退字体，同一页面里就会出现两种骨架。所以中文继续用 Inter，
+   只有英文切到 Nunito —— 单层 a、上翘的 t 收笔、极低的笔画对比，
+   让英文标题读起来比 Inter 更松弛，也和站点的圆角语言更贴。
+   放在两个主题块之后，才能覆盖它们里写死的 --font-sans。
+   ============================================================ */
+html[lang="en"] {
+  --font-sans: "Nunito", "Inter", system-ui, -apple-system, sans-serif;
 }
 
 /* ===== BASE ===== */
@@ -144,21 +156,6 @@ html[data-theme="light"] .site-flow::after {
   transform-origin: center top;
 }
 
-.site-flow__section::before {
-  content: "";
-  position: absolute;
-  z-index: 8;
-  top: -12vh;
-  right: 0;
-  left: 0;
-  height: 24vh;
-  background:
-    linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg-base) 58%, transparent), transparent),
-    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--border-accent) 42%, transparent), transparent 68%);
-  opacity: .42;
-  pointer-events: none;
-}
-
 .site-flow__section::after {
   content: "";
   position: absolute;
@@ -207,6 +204,7 @@ html[data-theme="light"] .site-flow::after {
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-sub);
+  overflow: hidden;
 }
 
 .about-logo-loop .logoloop__item {
@@ -231,6 +229,63 @@ html[data-theme="light"] .site-flow::after {
 .about-logo-loop .logoloop__item:hover img {
   opacity: 1;
   filter: grayscale(0) contrast(1.08);
+}
+
+/* ============================================ */
+/* Contact — brand marquee strip                 */
+/* ============================================ */
+
+.contact-marquee {
+  --marquee-base: #484848;
+  --marquee-shine: #c8c8c8;
+  position: relative;
+  overflow: hidden;
+  padding: 1.4rem 0 0.2rem;
+  border-top: 1px solid var(--border-subtle);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+}
+
+html[data-theme="light"] .contact-marquee {
+  --marquee-base: #b9b9b9;
+  --marquee-shine: #2c2c2c;
+}
+
+.contact-marquee__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: contact-marquee-scroll 44s linear infinite;
+}
+
+.contact-marquee__item {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  font-size: clamp(1rem, 1.55vw, 1.4rem);
+  font-weight: 500;
+  letter-spacing: 0.045em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.contact-marquee__sep {
+  display: inline-block;
+  margin: 0 1.9rem;
+  font-size: 0.66em;
+  color: var(--marquee-base);
+  transform: translateY(-0.08em);
+}
+
+@keyframes contact-marquee-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-marquee__track {
+    animation: none;
+  }
 }
 
 /* ============================================ */
@@ -280,6 +335,42 @@ html[data-theme="light"] .site-flow::after {
   line-height: 1.05;
   letter-spacing: -.018em;
   white-space: nowrap;
+}
+
+/*
+ * 标题下的一行说明。位置跟着标题走（同样 absolute 定位在顶部），
+ * 不占据卡片区域的空间 —— 卡片是 absolute 叠放的，中间那块必须留空。
+ */
+.codex-bounce-section__subtitle {
+  position: absolute;
+  z-index: 3;
+  top: calc(clamp(2rem, 5vw, 4.5rem) + clamp(2.4rem, 4.6vw, 5rem));
+  left: 50%;
+  width: min(88vw, 40rem);
+  margin: 0;
+  transform: translateX(-50%);
+  color: var(--section-visual-muted);
+  font-size: clamp(.84rem, 1.35vw, 1rem);
+  line-height: 1.6;
+  text-align: center;
+  text-wrap: balance;
+  pointer-events: none;
+}
+
+.codex-bounce-section__hint {
+  position: absolute;
+  z-index: 3;
+  bottom: clamp(1.5rem, 4vw, 2.75rem);
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%);
+  color: var(--section-visual-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .codex-bounce-section__cards {
@@ -552,8 +643,7 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 }
 
 .hero-grain,
-.hero-portrait-base,
-.hero-portrait-focus,
+.hero-ascii,
 .hero-sun {
   position: absolute;
   pointer-events: none;
@@ -571,39 +661,22 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
   mix-blend-mode: soft-light;
 }
 
-.hero-portrait-base,
-.hero-portrait-focus {
-  inset: 0;
-  background-image: url("/hero-bg.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: calc(66% + (var(--pointer-x-normalized, .5) - .5) * 18px) calc(42% + (var(--pointer-y-normalized, .5) - .5) * 10px);
-  filter: grayscale(1) contrast(1.12) brightness(.62);
-  transition: background-position .18s ease-out;
-}
-
-.hero-portrait-base {
+.hero-ascii {
   z-index: -3;
-  opacity: .68;
-  mask-image: linear-gradient(90deg, rgba(0,0,0,.24) 0%, rgba(0,0,0,.46) 43%, #000 100%);
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.24) 0%, rgba(0,0,0,.46) 43%, #000 100%);
+  inset: 0;
+  opacity: .6;
+  mask-image: linear-gradient(90deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.44) 43%, #000 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.44) 43%, #000 100%);
 }
 
-.hero-portrait-focus {
-  z-index: -2;
-  opacity: .72;
-  mix-blend-mode: screen;
-  mask-image: radial-gradient(420px circle at var(--pointer-x, 72%) var(--pointer-y, 45%), #000 0%, rgba(0,0,0,.95) 35%, transparent 74%);
-  -webkit-mask-image: radial-gradient(420px circle at var(--pointer-x, 72%) var(--pointer-y, 45%), #000 0%, rgba(0,0,0,.95) 35%, transparent 74%);
+.hero-ascii__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.portfolio-hero--light .hero-portrait-base {
-  opacity: .2;
-  mix-blend-mode: multiply;
-}
-
-.portfolio-hero--light .hero-portrait-focus {
-  opacity: .52;
+.portfolio-hero--light .hero-ascii {
+  opacity: .34;
   mix-blend-mode: multiply;
 }
 
@@ -798,8 +871,9 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
   width: max-content;
   max-width: 48ch;
   margin: 0 0 clamp(1.1rem, 2.6vw, 2.5rem);
-  padding: .45rem .65rem;
+  padding: .45rem .9rem;
   border: 1px solid rgba(255,255,255,.26);
+  border-radius: 999px;
   background: rgba(0,0,0,.08);
   font-size: clamp(9px, .75vw, 11px);
   letter-spacing: .13em;
@@ -831,10 +905,21 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 
 .portfolio-hero__character {
   display: inline-block;
+  /* z-index 由 JS 按翻转幅度写入，需要定位上下文才生效 */
+  position: relative;
   padding: .09em 0 .16em;
-  transform: rotate(var(--character-rotate, 0deg));
-  transform-origin: center 62%;
-  transition: transform .58s cubic-bezier(.16, 1, .3, 1);
+  /* 翻转轴过字符中心，像书页从中缝翻开 */
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  /*
+   * transform 由 TextFollowCursor 的 rAF 循环逐帧写入。
+   * 这里刻意不设 transition —— 否则 CSS 插值会与逐帧写入互相打断，
+   * 缓动被反复截断，反而不平滑。缓动在 JS 侧完成。
+   *
+   * backface-visibility 保持默认 visible：翻转角上限 42° 不会翻过背面，
+   * 但设成 hidden 会在某些浏览器下让字形边缘在大角度时被提前剔除。
+   */
+  will-change: transform;
 }
 
 .portfolio-hero__footer-copy {
@@ -906,6 +991,17 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 .site-ready .portfolio-hero__scroll { animation-delay: .44s; }
 .site-ready .portfolio-hero__stamp { animation-delay: .5s; }
 
+/*
+ * 首次入场：先让背景网格逐格铺开（约 1.1s），文字再接力出现。
+ * 二次渲染（切换主题/语言）不带 site-intro，沿用上面的快节奏。
+ */
+.site-intro .hero-statusbar { animation-delay: 1.12s; }
+.site-intro .portfolio-hero__eyebrow { animation-delay: 1.24s; }
+.site-intro .portfolio-hero__title { animation-delay: 1.34s; }
+.site-intro .portfolio-hero__footer-copy { animation-delay: 1.5s; }
+.site-intro .portfolio-hero__scroll { animation-delay: 1.62s; }
+.site-intro .portfolio-hero__stamp { animation-delay: 1.7s; }
+
 @keyframes hero-content-enter {
   from {
     opacity: 0;
@@ -953,7 +1049,7 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
   inset: 0;
   transform: scaleX(1);
   transform-origin: right center;
-  transition: transform 1.05s cubic-bezier(.77, 0, .18, 1) .16s;
+  transition: transform 1.25s cubic-bezier(.77, 0, .18, 1) .12s;
 }
 
 .hero-curtain--dark { background: #050505; }
@@ -971,15 +1067,8 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 }
 
 @media (max-width: 760px) {
-  .hero-portrait-base,
-  .hero-portrait-focus {
-    background-size: cover;
-    background-position: 64% 38%;
-  }
-
-  .hero-portrait-focus {
-    mask-image: radial-gradient(300px circle at var(--pointer-x, 72%) var(--pointer-y, 32%), #000 0%, rgba(0,0,0,.9) 34%, transparent 74%);
-    -webkit-mask-image: radial-gradient(300px circle at var(--pointer-x, 72%) var(--pointer-y, 32%), #000 0%, rgba(0,0,0,.9) 34%, transparent 74%);
+  .hero-ascii {
+    opacity: .42;
   }
 
   .hero-statusbar {
@@ -1027,9 +1116,16 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 
 @media (prefers-reduced-motion: reduce) {
   .hero-curtain { transition: none; }
+  .site-intro .hero-statusbar,
+  .site-intro .portfolio-hero__eyebrow,
+  .site-intro .portfolio-hero__title,
+  .site-intro .portfolio-hero__footer-copy,
+  .site-intro .portfolio-hero__scroll,
+  .site-intro .portfolio-hero__stamp { animation-delay: 0s; }
+  .loading-screen[data-exiting="true"] .loading-screen__meta,
+  .loading-screen[data-exiting="true"] .loading-screen__collection,
+  .loading-screen[data-exiting="true"] .loading-screen__progress { animation: none; }
   .portfolio-hero__scroll i { animation: none; }
-  .hero-portrait-base,
-  .hero-portrait-focus { transition: none; }
   .site-ready .hero-statusbar,
   .site-ready .portfolio-hero__eyebrow,
   .site-ready .portfolio-hero__title,
@@ -1071,10 +1167,21 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 
 .featured-grid-section__copy h2 {
   margin: 1.1rem 0 1.35rem;
-  font-size: clamp(3.2rem, 8.5vw, 9.5rem);
-  font-weight: 800;
-  line-height: .9;
-  letter-spacing: -.024em;
+  /* 与站点其他区块标题同级：text-4xl / md:text-5xl / lg:text-6xl */
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.025em;
+}
+
+.featured-grid-section__title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.featured-grid-section__title-line {
+  display: block;
 }
 
 .featured-grid-section__copy p {
@@ -1100,10 +1207,6 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
     top: 5.4rem;
     left: 1.25rem;
     width: min(20rem, 84vw);
-  }
-
-  .featured-grid-section__copy h2 {
-    font-size: clamp(3.3rem, 16vw, 5.8rem);
   }
 
   .featured-grid-section__status span:first-child {
@@ -1171,27 +1274,32 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
   justify-items: end;
 }
 
-.loading-face {
+.loading-ascii {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(4, clamp(62px, 8.8vw, 128px));
-  grid-template-rows: repeat(4, clamp(62px, 8.8vw, 128px));
-  width: min(35.2vw, 512px);
-  height: min(35.2vw, 512px);
+  width: min(46vw, 620px);
+  aspect-ratio: 1;
 }
 
-.loading-face__tile {
-  grid-column: calc(var(--column) + 1);
-  grid-row: calc(var(--row) + 1);
-  background-image: linear-gradient(rgba(208, 55, 30, .78), rgba(208, 55, 30, .78)), url("/hero-bg.jpg");
-  background-size: 400% 400%;
-  background-position:
-    0 0,
-    calc(var(--column) * 33.333%) calc(var(--row) * 33.333%);
-  background-blend-mode: color;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
-  filter: contrast(1.25) grayscale(1);
+/* 进度到 100% 时，先让四角文字散掉，网格独自留一拍再随整层淡出 */
+.loading-screen[data-exiting="true"] .loading-screen__meta,
+.loading-screen[data-exiting="true"] .loading-screen__collection,
+.loading-screen[data-exiting="true"] .loading-screen__progress {
+  animation: loading-text-dissolve .42s cubic-bezier(.4, 0, 1, 1) both;
+}
+
+.loading-screen[data-exiting="true"] .loading-screen__collection { animation-delay: .04s; }
+.loading-screen[data-exiting="true"] .loading-screen__progress { animation-delay: .08s; }
+
+@keyframes loading-text-dissolve {
+  from { opacity: 1; filter: blur(0); transform: translateY(0); }
+  to { opacity: 0; filter: blur(6px); transform: translateY(-8px); }
+}
+
+.loading-ascii__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .loading-screen__collection {
@@ -1258,11 +1366,8 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
     display: none;
   }
 
-  .loading-face {
-    grid-template-columns: repeat(4, 21vw);
-    grid-template-rows: repeat(4, 21vw);
-    width: 84vw;
-    height: 84vw;
+  .loading-ascii {
+    width: 86vw;
   }
 
   .loading-screen__progress {
@@ -1272,5 +1377,643 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 
   .loading-screen__track {
     width: 44vw;
+  }
+}
+
+/* ============================================ */
+/* About avatar — cover texture + pointer spot   */
+/* ============================================ */
+
+.avatar-spotlight {
+  --spot-x: 50%;
+  --spot-y: 50%;
+  --spot-r: 30%;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  border-radius: 1rem;
+  /* 倾斜要有纵深感，透视必须加在父层而不是被倾斜的元素上 */
+  perspective: 900px;
+  cursor: crosshair;
+}
+
+.avatar-spotlight__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style: preserve-3d;
+  /* 跟随时短、回正时长：跟手但不生硬 */
+  transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+  will-change: transform;
+}
+
+.avatar-spotlight--active .avatar-spotlight__inner {
+  transition: transform .12s ease-out;
+}
+
+.avatar-spotlight__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+
+/*
+ * ASCII 层默认整层透明，靠 mask 的半径从 0 撑开。
+ * 用 mask 而不是 opacity，才能做到"只在鼠标经过的地方"出现效果。
+ */
+.avatar-spotlight__ascii {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity .34s ease;
+  mask-image: radial-gradient(
+    circle var(--spot-r) at var(--spot-x) var(--spot-y),
+    #000 0%,
+    rgba(0, 0, 0, .72) 55%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle var(--spot-r) at var(--spot-x) var(--spot-y),
+    #000 0%,
+    rgba(0, 0, 0, .72) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.avatar-spotlight--active .avatar-spotlight__ascii {
+  opacity: 1;
+}
+
+.avatar-spotlight__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 斜向高光：封面印刷的质感来源 */
+.avatar-spotlight__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity .4s ease;
+  background: radial-gradient(
+    circle 42% at var(--spot-x) var(--spot-y),
+    rgba(255, 255, 255, .2) 0%,
+    rgba(255, 255, 255, .05) 42%,
+    transparent 70%
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.avatar-spotlight--active .avatar-spotlight__sheen {
+  opacity: 1;
+}
+
+/* 内描边：压住 ASCII 色块在圆角边缘的硬切 */
+.avatar-spotlight__edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
+  pointer-events: none;
+}
+
+[data-theme="light"] .avatar-spotlight__edge {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1);
+}
+
+@media (max-width: 760px) {
+  /* 触屏没有 hover，交互层不参与，留原图即可 */
+  .avatar-spotlight__ascii,
+  .avatar-spotlight__sheen {
+    display: none;
+  }
+
+  .avatar-spotlight {
+    cursor: default;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-spotlight__inner {
+    transition: none;
+    transform: none;
+  }
+
+  .avatar-spotlight__ascii,
+  .avatar-spotlight__sheen {
+    transition: none;
+  }
+}
+
+
+/* ============================================================
+   ExperienceTimeline — 工作经历时间线
+   默认态只读公司/职位/一句话；hover 或键盘聚焦时右侧打字机展开详情。
+   ============================================================ */
+
+.exp-timeline {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 贯穿三段经历的竖轴。用伪元素而不是给每行画边框，
+   这样首尾不会各多出一截线头。 */
+.exp-timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--border-subtle) 12%,
+    var(--border-subtle) 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.exp-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-areas:
+    "rail main"
+    "rail detail";
+  column-gap: 20px;
+  padding: 22px 20px 22px 0;
+  border-radius: 14px;
+  outline: none;
+  cursor: default;
+  transition: background 0.4s ease;
+}
+
+/* 悬浮态：极淡底色 + 一条左侧高亮，不引入新色彩，只用透明度分层 */
+.exp-row::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 22px;
+  bottom: 22px;
+  width: 1px;
+  background: var(--text-main);
+  opacity: 0;
+  transform: scaleY(0.3);
+  transform-origin: top;
+  transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.exp-row[data-active="true"] {
+  background: var(--bg-card);
+}
+
+/* outline:none 只关掉鼠标点击时的描边，键盘聚焦仍要看得见落点 */
+.exp-row:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--text-dim);
+}
+
+.exp-row[data-active="true"]::after {
+  opacity: 0.5;
+  transform: scaleY(1);
+}
+
+.exp-row__rail {
+  grid-area: rail;
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-left: 0;
+}
+
+.exp-row__node {
+  position: relative;
+  top: 6px;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+  transition: border-color 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.exp-row[data-active="true"] .exp-row__node {
+  border-color: var(--text-main);
+  transform: scale(1.25);
+}
+
+/* 年份走等宽字体 —— 与全站 eyebrow / meta 同一套标注语言 */
+.exp-row__year {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  transition: color 0.4s ease;
+}
+
+.exp-row[data-active="true"] .exp-row__year {
+  color: var(--text-sub);
+}
+
+.exp-row__main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.exp-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--text-main);
+}
+
+.exp-row__sep {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.exp-row__role {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-sub);
+}
+
+.exp-row__line {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+  transition: color 0.4s ease;
+}
+
+.exp-row[data-active="true"] .exp-row__line {
+  color: var(--text-sub);
+}
+
+/* 详情区：默认压扁并裁掉，展开时长回原高。
+   max-height 用一个够大的值配合 grid-template-rows 之外的裁切，
+   避免逐帧测量高度。 */
+.exp-row__detail {
+  grid-area: detail;
+  display: grid;
+  gap: 12px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-4px);
+  transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.exp-row[data-active="true"] .exp-row__detail {
+  /* 实测最坏情况（英文、窄列）约 150px；给到 200px 留余量。
+     值给得过大会让 max-height 过渡大半时间跑在空白区间，观感是先慢后突然停。 */
+  max-height: 200px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-top: 16px;
+}
+
+.exp-row__block {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.exp-row__label {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding-top: 3px;
+}
+
+/* ghost 撑高度、typed 盖在上面：打字过程中行数不变，
+   下方经历不会被逐字顶动。 */
+.exp-row__text {
+  position: relative;
+  display: block;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text-sub);
+}
+
+.exp-row__ghost {
+  visibility: hidden;
+}
+
+.exp-row__typed {
+  position: absolute;
+  inset: 0;
+}
+
+.exp-row__caret {
+  display: inline-block;
+  width: 1px;
+  height: 0.95em;
+  margin-left: 2px;
+  vertical-align: -0.1em;
+  background: var(--text-main);
+  animation: exp-caret-blink 0.85s steps(1, end) infinite;
+}
+
+@keyframes exp-caret-blink {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (max-width: 760px) {
+  .exp-row {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "rail"
+      "main"
+      "detail";
+    row-gap: 10px;
+    padding: 20px 16px 20px 22px;
+  }
+
+  .exp-timeline::before,
+  .exp-row::after {
+    left: 0;
+  }
+
+  .exp-row__node {
+    position: absolute;
+    left: -27px;
+    top: 5px;
+  }
+
+  /* 触屏没有 hover，详情直接展开，别让内容藏在读不到的状态里 */
+  .exp-row__detail {
+    max-height: none;
+    opacity: 1;
+    transform: none;
+    margin-top: 12px;
+  }
+
+  .exp-row__typed {
+    position: static;
+  }
+
+  .exp-row__ghost {
+    display: none;
+  }
+
+  .exp-row__block {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exp-row,
+  .exp-row::after,
+  .exp-row__node,
+  .exp-row__detail,
+  .exp-row__line,
+  .exp-row__year {
+    transition: none;
+  }
+
+  .exp-row__caret {
+    animation: none;
+  }
+}
+
+
+/* ============================================================
+   Hobbies — 兴趣爱好卡片
+   默认：线性图标 + 标题 + 一句简介，左对齐。
+   悬停/聚焦：卡片轻微高亮 → 标题下方细线生长 → 条目逐条淡入。
+   时序经过反算：条目最多的卡（健身）有 7 条，
+   90ms 起手 + 6×40ms 排队 + 260ms 单条淡入 = 590ms，
+   落在 0.4-0.6s 预算内。间隔提到 45ms 即超时，所以固定 40ms。
+   ============================================================ */
+
+.hobby-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  /* grid 默认 stretch：一张卡展开变高，同行其他卡会被拉到同一高度，
+     看上去像整行一起下拉了。改成 start 后每张卡只按自身内容取高。 */
+  align-items: start;
+}
+
+@media (min-width: 1280px) {
+  .hobby-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .hobby-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+.hobby-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 22px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  outline: none;
+  cursor: default;
+  /* align-items:start 后卡片按自身内容取高，折叠态会因简介行数不同而参差。
+     实测最高一张（英文两行）约 157px，给 160px 兜平。 */
+  min-height: 160px;
+  transition: border-color 0.35s ease, background 0.35s ease;
+}
+
+/* 「轻微高亮」= 边框稍微提亮 + 极淡底色，不做位移、不做阴影 */
+.hobby-card[data-active="true"] {
+  /* --border-strong 全站未定义；直接按主题给值，避免浅色下用到偏重的灰 */
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--bg-card);
+}
+
+[data-theme="light"] .hobby-card[data-active="true"] {
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+.hobby-card:focus-visible {
+  border-color: var(--text-dim);
+}
+
+.hobby-card__icon {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--text-dim);
+  transition: color 0.35s ease;
+}
+
+.hobby-card[data-active="true"] .hobby-card__icon {
+  color: var(--text-main);
+}
+
+.hobby-card__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+.hobby-card__intro {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  transition: color 0.35s ease;
+}
+
+.hobby-card[data-active="true"] .hobby-card__intro {
+  color: var(--text-sub);
+}
+
+/* 细线：默认 0 宽，展开时从左往右长出来。
+   它是内容的起手式 —— 先有分隔，再有条目，读起来有先后。 */
+.hobby-card__rule {
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin-top: 14px;
+  background: var(--border-subtle);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease,
+    margin-top 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hobby-card[data-active="true"] .hobby-card__rule {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+.hobby-card__detail {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  /* 展开由 max-height 控制；条目自身的淡入交给 --step 排队 */
+  transition: max-height 0.44s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 0.44s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hobby-card[data-active="true"] .hobby-card__detail {
+  /* 最多的一张是健身：2 组 + 6 条，实测上限约 210px，给 260px 留余量 */
+  max-height: 260px;
+  margin-top: 12px;
+}
+
+.hobby-card__group {
+  display: block;
+}
+
+.hobby-card__label {
+  display: block;
+  margin-bottom: 5px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.hobby-card__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hobby-card__item {
+  font-size: 0.75rem;
+  line-height: 1.75;
+  color: var(--text-sub);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --step 由 JSX 跨 group 连续累加，所以节奏是一条线而不是每组重新开始。
+   90ms 起手让首条晚于细线；50ms 一档。 */
+.hobby-card[data-active="true"] .hobby-card__item {
+  opacity: 1;
+  transform: translateY(0);
+  /* 条目最多的健身卡有 7 条：90ms 起手 + 6×40ms + 260ms 淡入 = 590ms，
+     刚好压在 0.6s 预算内。间隔提到 45ms 就会超时。 */
+  transition-delay: calc(90ms + var(--step) * 40ms);
+}
+
+@media (max-width: 720px) {
+  /* 触屏没有 hover，内容常驻展开，别把信息藏进读不到的状态 */
+  .hobby-card__rule {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+
+  .hobby-card__detail {
+    max-height: none;
+    margin-top: 12px;
+    overflow: visible;
+  }
+
+  .hobby-card__item {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hobby-card,
+  .hobby-card__icon,
+  .hobby-card__intro,
+  .hobby-card__rule,
+  .hobby-card__detail,
+  .hobby-card__item {
+    transition: none;
+  }
+
+  .hobby-card__item {
+    transition-delay: 0ms;
   }
 }

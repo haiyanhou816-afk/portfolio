@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-
-const tiles = [
-  [0, 1], [1, 0], [1, 1], [1, 2],
-  [2, 0], [2, 1], [2, 2], [2, 3],
-  [3, 1], [3, 2],
-];
+import AsciiVignetteBloom from "./AsciiVignetteBloom";
 
 export default function LoadingScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
-  const [activeTiles, setActiveTiles] = useState([]);
 
   useEffect(() => {
     let imageReady = false;
@@ -17,7 +11,8 @@ export default function LoadingScreen({ onComplete }) {
     let completed = false;
     const image = new Image();
     const startedAt = performance.now();
-    const minDuration = 1650;
+    // 最短展示时长：给用户足够时间看清网格效果与四角信息
+    const minDuration = 4200;
     let frameId;
     let completeTimeoutId;
 
@@ -25,7 +20,7 @@ export default function LoadingScreen({ onComplete }) {
       if (completed || !imageReady || !minTimeReady) return;
       completed = true;
       setProgress(100);
-      completeTimeoutId = window.setTimeout(onComplete, 380);
+      completeTimeoutId = window.setTimeout(onComplete, 620);
     };
 
     const markImageReady = () => {
@@ -45,8 +40,9 @@ export default function LoadingScreen({ onComplete }) {
 
     const tick = (now) => {
       const elapsed = Math.min((now - startedAt) / minDuration, 1);
-      const eased = 1 - Math.pow(1 - elapsed, 3);
-      setProgress(Math.min(96, Math.round(eased * 96)));
+      // 近线性 + 尾段减速：全程匀速爬升，最后 15% 放慢一半，结尾正好收在 96%
+      const eased = elapsed < 0.85 ? elapsed * 1.08 : 1.08 * 0.85 + (elapsed - 0.85) * 0.547;
+      setProgress(Math.min(96, Math.round(Math.min(eased, 1) * 96)));
 
       if (elapsed < 1) {
         frameId = requestAnimationFrame(tick);
@@ -63,26 +59,18 @@ export default function LoadingScreen({ onComplete }) {
     };
   }, [onComplete]);
 
-  useEffect(() => {
-    const randomizeTiles = () => {
-      const amount = Math.random() > 0.7 ? 2 : 1;
-      const picked = new Set();
-      while (picked.size < amount) {
-        picked.add(Math.floor(Math.random() * tiles.length));
-      }
-      setActiveTiles([...picked]);
-    };
-
-    randomizeTiles();
-    const intervalId = window.setInterval(randomizeTiles, 260);
-    return () => window.clearInterval(intervalId);
-  }, []);
+  // 进度 0-78% 映射到网格揭示 0-1，之后网格保持完整形态
+  const gridReveal = Math.min(1, progress / 78);
 
   return (
     <motion.div
       className="loading-screen"
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.55, ease: [0.76, 0, 0.24, 1] } }}
+      exit={{
+        opacity: 0,
+        transition: { duration: 0.72, ease: [0.76, 0, 0.24, 1] },
+      }}
+      data-exiting={progress >= 100 ? "true" : undefined}
       aria-live="polite"
       aria-label={`Loading ${progress}%`}
     >
@@ -99,37 +87,16 @@ export default function LoadingScreen({ onComplete }) {
         <strong>VISUAL DESIGN</strong>
       </div>
 
-      <div className="loading-face" aria-hidden="true">
-        {tiles.map(([row, column], index) => {
-          const isActive = activeTiles.includes(index);
-          const driftX = ((index * 13) % 9) - 4;
-          const driftY = ((index * 7) % 7) - 3;
-
-          return (
-            <motion.div
-              key={`${row}-${column}`}
-              className="loading-face__tile"
-              style={{ "--row": row, "--column": column }}
-              initial={{ opacity: 0, scale: 0.72, y: 18 }}
-              animate={{
-                x: isActive ? [0, driftX * 3, 0] : [0, driftX, 0],
-                y: isActive ? [0, driftY * 4, 0] : [0, driftY, 0],
-                scale: isActive ? [1, 0.78, 1.06, 1] : [1, 1.018, 1],
-                opacity: isActive ? [1, 0.28, 1] : [0.82, 1, 0.82],
-                filter: isActive
-                  ? ["contrast(1.25) grayscale(1)", "contrast(1.8) grayscale(1)", "contrast(1.25) grayscale(1)"]
-                  : "contrast(1.25) grayscale(1)",
-              }}
-              transition={{
-                delay: 0.1 + index * 0.055,
-                duration: isActive ? 0.42 : 2.1 + (index % 3) * 0.22,
-                ease: isActive ? [0.22, 1, 0.36, 1] : "easeInOut",
-                repeat: isActive ? 0 : Infinity,
-                repeatType: "mirror",
-              }}
-            />
-          );
-        })}
+      <div className="loading-ascii" aria-hidden="true">
+        <AsciiVignetteBloom
+          className="loading-ascii__canvas"
+          src="/hero-bg.jpg"
+          bgColor="transparent"
+          edgeFade={0.42}
+          /* 网格随进度逐格铺开，在 78% 处就铺满，留一段完整形态给用户看 */
+          reveal={gridReveal < 1 ? gridReveal : null}
+          config={{ bgMode: "none" }}
+        />
       </div>
 
       <div className="loading-screen__collection">

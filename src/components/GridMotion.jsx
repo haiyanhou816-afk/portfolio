@@ -6,7 +6,12 @@ const isImageSource = (value) =>
   typeof value === "string" &&
   (value.startsWith("http") || value.startsWith("/") || /\.(png|jpe?g|webp|gif|avif)$/i.test(value));
 
-export default function GridMotion({ items = [], gradientColor = "black" }) {
+/**
+ * items 支持两种写法：
+ *   - 字符串（图片 URL 或文字），无交互
+ *   - { src, label, id } 对象，此时格子获得按钮语义并可激活
+ */
+export default function GridMotion({ items = [], gradientColor = "black", onItemActivate }) {
   const rowRefs = useRef([]);
   const mouseXRef = useRef(typeof window === "undefined" ? 0 : window.innerWidth / 2);
   const isVisibleRef = useRef(false);
@@ -82,9 +87,42 @@ export default function GridMotion({ items = [], gradientColor = "black" }) {
               }}
             >
               {Array.from({ length: 7 }, (_, itemIndex) => {
-                const content = combinedItems[rowIndex * 7 + itemIndex];
+                const flatIndex = rowIndex * 7 + itemIndex;
+                const raw = combinedItems[flatIndex];
+                const isRich = raw && typeof raw === "object";
+                const content = isRich ? raw.src : raw;
+                const interactive = Boolean(isRich && onItemActivate);
+
+                // 交互语义直接挂在格子上：键盘可达，读屏能报出项目名，
+                // 且激活时携带自身数据，不需要事后查 DOM 位置。
+                const activate = interactive
+                  ? (event) => {
+                      event.stopPropagation();
+                      onItemActivate(raw, flatIndex);
+                    }
+                  : undefined;
+
+                const interactiveProps = interactive
+                  ? {
+                      role: "button",
+                      tabIndex: 0,
+                      "aria-label": raw.label,
+                      onClick: activate,
+                      onKeyDown: (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          activate(event);
+                        }
+                      },
+                    }
+                  : {};
+
                 return (
-                  <div key={itemIndex} className="grid-motion__item">
+                  <div
+                    key={itemIndex}
+                    className={`grid-motion__item${interactive ? " grid-motion__item--interactive" : ""}`}
+                    {...interactiveProps}
+                  >
                     <div className="grid-motion__item-inner">
                       {isImageSource(content) ? (
                         <div className="grid-motion__item-image" style={{ backgroundImage: `url(${content})` }} />

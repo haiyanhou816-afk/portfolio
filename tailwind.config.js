@@ -6,7 +6,8 @@ export default {
     extend: {
       maxWidth: { 'content': '1700px' },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        // 走 CSS 变量，才能跟着 html[lang] 一起切字族（中文 Inter / 英文 Nunito）
+        sans: ['var(--font-sans)'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
     },
