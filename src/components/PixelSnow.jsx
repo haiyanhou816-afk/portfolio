@@ -21,6 +21,7 @@ void main() {
 
 const fragmentShader = `
 precision mediump float;
+out vec4 fragColor;
 uniform float uTime; uniform vec2 uResolution; uniform float uFlakeSize;
 uniform float uMinFlakeSize; uniform float uPixelResolution; uniform float uSpeed;
 uniform float uDepthFade; uniform float uFarPlane; uniform vec3 uColor;
@@ -115,7 +116,7 @@ void main() {
           float flakeSizeRatio = uFlakeSize / calculatedFlakeSize;
           float intensity = exp2(-(t + toIntersection) * invDepthFade) *
             min(1.0, flakeSizeRatio * flakeSizeRatio) * uBrightness;
-          gl_FragColor = vec4(uColor * pow(vec3(intensity), vec3(uGamma)), 1.0);
+          fragColor = vec4(uColor * pow(vec3(intensity), vec3(uGamma)), 1.0);
           return;
         }
       }
@@ -127,7 +128,7 @@ void main() {
     t += nextStep;
     pos = mix(pos + ray * nextStep, floor(pos + ray * nextStep + 0.5), sel);
   }
-  gl_FragColor = vec4(0.0);
+  fragColor = vec4(0.0);
 }
 `;
 
