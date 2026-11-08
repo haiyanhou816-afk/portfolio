@@ -35,5 +35,34 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- 访问埋点：仅本地预览生效，上报到 localhost:4000 的管理后台 -->
+    <script>
+      (function () {
+        var host = location.hostname;
+        if (host !== 'localhost' && host !== '127.0.0.1') return;
+        var endpoint = 'http://' + host + ':4000/api/track';
+        var payload = JSON.stringify({
+          path: location.pathname + location.search + location.hash,
+          referrer: document.referrer || '',
+          userAgent: navigator.userAgent,
+          source: 'portfolio-local'
+        });
+        function report() {
+          fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true,
+            mode: 'cors',
+            credentials: 'omit'
+          }).catch(function () {});
+        }
+        if (document.readyState === 'complete') report();
+        else window.addEventListener('load', report, { once: true });
+      })();
+    </script>
+    <!-- Cloudflare Web Analytics -->
+    <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "9f1c1d6e029140a8a3f4c8cf76884bd2"}'></script>
+    <!-- End Cloudflare Web Analytics -->
   </body>
 </html>
