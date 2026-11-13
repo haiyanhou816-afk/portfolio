@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Upload, Image as ImageIcon, X, ArrowLeft, Sparkles, Tag, Clock, Trash2 } from 'lucide-react';
+import { Search, Upload, Image as ImageIcon, X, ArrowLeft, Sparkles, Tag, Clock } from 'lucide-react';
+import HoldButton from './HoldButton';
 
 // ========== IndexedDB 工具 ==========
 const DB_NAME = 'InspirationGalleryDB';
@@ -346,14 +347,33 @@ export default function InspirationGallery({ onBack }) {
                     />
                   </div>
 
-                  {/* 始终可见的删除按钮 */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(img.id); }}
-                    title="删除此图片"
-                    className="absolute top-2 right-2 z-10 w-8 h-8 bg-[var(--bg-base)]/60 hover:bg-red-600 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all"
+                  {/* 长按删除，避免误触 */}
+                  <div
+                    className="absolute top-2 right-2 z-10 opacity-70 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
-                    <Trash2 size={16} />
-                  </button>
+                    <HoldButton
+                      doneLabel="已删除"
+                      backgroundColor="rgba(16,16,18,0.82)"
+                      fillColor="#eab308"
+                      textColor="#e4e4e7"
+                      fillTextColor="#18181b"
+                      size="sm"
+                      radius={8}
+                      fillDirection="right"
+                      holdTime={900}
+                      releaseTime={180}
+                      pressScale={0.96}
+                      wave
+                      waveAmplitude={4}
+                      glow
+                      resetAfter={600}
+                      onHold={() => handleDelete(img.id)}
+                    >
+                      删除
+                    </HoldButton>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -417,12 +437,26 @@ export default function InspirationGallery({ onBack }) {
                   </span>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={() => handleDelete(selectedImage.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs hover:bg-red-500/20 transition-colors"
+                  <HoldButton
+                    doneLabel="已删除"
+                    backgroundColor="#27272a"
+                    fillColor="#eab308"
+                    textColor="#f5f5f5"
+                    fillTextColor="#ffffff"
+                    size="md"
+                    radius={14}
+                    fillDirection="right"
+                    holdTime={2000}
+                    releaseTime={200}
+                    pressScale={0.97}
+                    wave
+                    waveAmplitude={6}
+                    glow
+                    resetAfter={1200}
+                    onHold={() => handleDelete(selectedImage.id)}
                   >
-                    <Trash2 size={12} /> 删除
-                  </button>
+                    长按删除
+                  </HoldButton>
                 </div>
               </div>
             </motion.div>

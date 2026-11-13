@@ -1,0 +1,171 @@
+.hold-button-root {
+  --hb-p: 0;
+  position: relative;
+  display: inline-flex;
+  /* 让发光能溢出到按钮外面 */
+  isolation: isolate;
+}
+
+/* 呼吸式外发光，随长按进度亮起 */
+.hb__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--hb-radius, 14px);
+  box-shadow: 0 0 20px 2px var(--hb-fill);
+  opacity: calc(var(--hb-p) * 0.65);
+  pointer-events: none;
+  transition: opacity 120ms linear;
+}
+
+.hold-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hb-h, 40px);
+  padding: 0 var(--hb-px, 18px);
+  border: 0;
+  border-radius: var(--hb-radius, 14px);
+  background: var(--hb-bg, #27272a);
+  color: var(--hb-text, #f5f5f5);
+  font-family: inherit;
+  font-size: var(--hb-fs, 13px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  transform: scale(1);
+  transition:
+    transform 200ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    background-color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hold-button.is-holding {
+  transform: scale(var(--hb-press, 0.97));
+}
+
+.hold-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hold-button:focus-visible {
+  outline: 2px solid var(--hb-fill, #eab308);
+  outline-offset: 3px;
+}
+
+/* ---------- 填充层 ---------- */
+.hb__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--hb-fill, #eab308);
+  pointer-events: none;
+}
+
+.hold-button[data-dir="right"] .hb__fill {
+  right: auto;
+  width: calc(var(--hb-p) * 100%);
+}
+
+.hold-button[data-dir="left"] .hb__fill {
+  left: auto;
+  width: calc(var(--hb-p) * 100%);
+}
+
+.hold-button[data-dir="up"] .hb__fill {
+  top: auto;
+  height: calc(var(--hb-p) * 100%);
+}
+
+.hold-button[data-dir="down"] .hb__fill {
+  bottom: auto;
+  height: calc(var(--hb-p) * 100%);
+}
+
+/* ---------- 波浪前缘 ---------- */
+/* 波形条收在填充块内侧（占最后 2 倍振幅），曲线在条内起伏，
+   左侧永远是实心，因此和填充块之间不会出现缝隙 */
+.hb__wave {
+  position: absolute;
+  color: var(--hb-fill, #eab308);
+  pointer-events: none;
+  opacity: clamp(0, calc(var(--hb-p) * 400), 1);
+}
+
+.hold-button[data-dir="right"] .hb__wave {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: calc(var(--hb-amp) * 2px);
+}
+
+.hold-button[data-dir="left"] .hb__wave {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--hb-amp) * 2px);
+  transform: scaleX(-1);
+}
+
+.hold-button[data-dir="up"] .hb__wave {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(var(--hb-amp) * 2px);
+}
+
+.hold-button[data-dir="down"] .hb__wave {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--hb-amp) * 2px);
+  transform: scaleY(-1);
+}
+
+/* ---------- 文字 ---------- */
+.hb__label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  transition: opacity 160ms ease;
+}
+
+/* 已填充区域用另一种文字色，裁切跟随进度 */
+.hb__label--fill {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  color: var(--hb-fill-text, #fff);
+}
+
+.hold-button[data-dir="right"] .hb__label--fill {
+  clip-path: inset(0 calc((1 - var(--hb-p)) * 100%) 0 0);
+}
+
+.hold-button[data-dir="left"] .hb__label--fill {
+  clip-path: inset(0 0 0 calc((1 - var(--hb-p)) * 100%));
+}
+
+.hold-button[data-dir="up"] .hb__label--fill {
+  clip-path: inset(calc((1 - var(--hb-p)) * 100%) 0 0 0);
+}
+
+.hold-button[data-dir="down"] .hb__label--fill {
+  clip-path: inset(0 0 calc((1 - var(--hb-p)) * 100%) 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hold-button {
+    transition: none;
+  }
+}
