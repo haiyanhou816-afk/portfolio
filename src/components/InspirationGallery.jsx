@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Upload, Image as ImageIcon, X, ArrowLeft, Sparkles, Tag, Clock, Trash2 } from 'lucide-react';
+import DriftWall from './DriftWall';
 
 // ========== IndexedDB 工具 ==========
 const DB_NAME = 'InspirationGalleryDB';
@@ -128,6 +129,19 @@ export default function InspirationGallery({ onBack }) {
   }, [searchQuery, images]);
 
   const currentList = filteredImages !== null ? filteredImages : images;
+
+  /* DriftWall 需要 { image, title } 结构，raw 保留原始记录给弹窗用。
+     墙是循环滚动的，最多取 60 张，避免一次塞进过多 base64 图片。 */
+  const driftItems = useMemo(
+    () =>
+      currentList.slice(0, 60).map((img) => ({
+        id: img.id,
+        image: img.dataUrl,
+        title: (img.description || '灵感').replace(/\s+/g, ' ').slice(0, 26),
+        raw: img,
+      })),
+    [currentList]
+  );
 
   // ---- 拖拽绑定（仅绑定到主容器，整个页面都可以拖） ----
   const handleGlobalDragOver = useCallback((e) => {
@@ -320,44 +334,36 @@ export default function InspirationGallery({ onBack }) {
           </p>
         </div>
 
-        {/* 瀑布流 */}
+        {/* 漂移图墙 */}
         <div className="max-w-[1700px] mx-auto px-6 md:px-12">
-          <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
-            <AnimatePresence>
-              {currentList.map((img) => (
-                <motion.div
-                  key={img.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  layout
-                  transition={{ duration: 0.3 }}
-                  className="break-inside-avoid group relative"
-                >
-                  <div
-                    className="rounded-xl overflow-hidden bg-white/[0.03] border border-white/5 hover:border-white/20 transition-all cursor-pointer"
-                    onClick={() => setSelectedImage(img)}
-                  >
-                    <img
-                      src={img.dataUrl}
-                      alt={img.description}
-                      className="w-full transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  {/* 始终可见的删除按钮 */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(img.id); }}
-                    title="删除此图片"
-                    className="absolute top-2 right-2 z-10 w-8 h-8 bg-[var(--bg-base)]/60 hover:bg-red-600 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          {currentList.length > 0 && (
+            <div
+              className="overflow-hidden rounded-2xl border border-white/5"
+              style={{ height: 'min(72vh, 720px)', minHeight: 480 }}
+            >
+              <DriftWall
+                items={driftItems}
+                columns={5}
+                tileWidth={200}
+                tileHeight={132}
+                gap={18}
+                tilt={16}
+                turn={-14}
+                perspective={1200}
+                depth={120}
+                speed={42}
+                direction="up"
+                variance={0.45}
+                parallax={0.6}
+                lift={64}
+                fade={0.6}
+                dim={0.55}
+                overlayColor="#060010"
+                onItemClick={(item) => setSelectedImage(item.raw)}
+                onItemDelete={(item) => handleDelete(item.id)}
+              />
+            </div>
+          )}
 
           {/* 空状态 */}
           {!images.length && (
@@ -365,6 +371,15 @@ export default function InspirationGallery({ onBack }) {
               <ImageIcon size={48} className="mb-4 opacity-30" />
               <p className="text-sm">还没有灵感图片</p>
               <p className="text-xs mt-1">拖拽、粘贴一张图片开始收藏</p>
+            </div>
+          )}
+
+          {/* 搜索无结果 */}
+          {images.length > 0 && currentList.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-32 text-[var(--text-dim)]">
+              <Search size={40} className="mb-4 opacity-30" />
+              <p className="text-sm">没有找到匹配的灵感</p>
+              <p className="text-xs mt-1">换个关键词试试</p>
             </div>
           )}
         </div>
