@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
+<title><%= title %> · Portfolio Admin</title>
+<%- include('theme-boot') %>
+<%- include('admin-style') %>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">
+    <div class="logo-mark">P</div>
+    <div><b>Portfolio Admin</b><small>管理后台 · v1.0</small></div>
+  </div>
+  <div class="nav-label">工作台</div>
+  <nav class="nav">
+    <a class="on" data-view="overview" href="#overview"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>仪表盘</a>
+    <a data-view="visits" href="#visits"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>访问记录</a>
+    <a data-view="users" href="#users"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M17 11a3 3 0 100-6M18 20c0-2.2-.8-3.8-2-4.8"/></svg>用户管理</a>
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+  </nav>
+  <div class="nav-label">系统</div>
+  <nav class="nav">
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+  </nav>
+  <div class="side-foot">
+    <div class="live"><i></i>服务运行中</div>
+    端口 <%= stats.port %> · <%= stats.storageLabel %>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="top">
+    <div class="crumb">工作台 / <b id="viewTitle">仪表盘</b></div>
+    <div class="top-actions">
+      <div class="badge"><i></i>本地持久化</div>
+      <button class="btn ghost" onclick="location.reload()">刷新</button>
+      <button class="btn" id="trackBtn">打开作品集</button>
+    </div>
+  </header>
+
+  <div class="source-tabs">
+    <a href="/online">线上站点 · Cloudflare</a>
+    <a href="/monitor">入口与安全</a>
+    <a class="on" href="/dashboard">本地预览 · 埋点</a>
+    <a href="/health">健康检查</a>
+    <a href="/api-explorer">API 数据</a>
+    <a href="/setup">数据源配置</a>
+  </div>
+
+  <!-- ───────── 视图 1：仪表盘 ───────── -->
+  <div class="view on" id="overview">
+    <div class="notice">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <div>
+        <b>统计来自作品集站点的真实访问埋点，不含任何演示数据。</b>
+        记录持久化在 <code><%= stats.dataFile %></code>，服务重启后保留。
+        埋点由作品集页面在本机预览时上报；线上后台是独立实例，不会同步本机访问记录，也不会用模拟数据填充空白。
+      </div>
+    </div>
+
+    <section class="grid">
+      <div class="stat">
+        <div class="label">累计访问 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span></div>
+        <div class="num mono"><%= stats.total %></div>
+        <div class="sub"><em>埋点上报</em> · 今日新增 <%= stats.today %></div>
+      </div>
+      <div class="stat">
+        <div class="label">独立访客 IP <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span></div>
+        <div class="num mono"><%= stats.uniqueIPs %></div>
+        <div class="sub">取自服务端真实连接 IP</div>
+      </div>
+      <div class="stat">
+        <div class="label">注册用户 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg></span></div>
+        <div class="num mono" id="userStatNum"><%= stats.users %></div>
+        <div class="sub"><a href="#users" data-go-view="users">前往用户管理</a></div>
+      </div>
+      <div class="stat">
+        <div class="label">服务状态 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/></svg></span></div>
+        <div class="num state">运行中</div>
+        <div class="sub">监听 <code>*:<%= stats.port %></code>（本机所有网卡）</div>
+      </div>
+    </section>
+
+    <section class="panels">
+      <div class="panel">
+        <h2>访问趋势</h2>
+        <div class="desc">最近 7 天真实访问 · 共 <%= stats.total %> 条记录</div>
+        <div class="chart<%= stats.total === 0 ? ' is-empty' : '' %>">
+          <% if (stats.total === 0) { %>
+          <div class="chart-empty">
+            <div class="ring"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 5-7 4 4"/></svg></div>
+            <b>还没有访问数据</b>
+            <span>打开作品集页面，这里会显示近 7 天访问趋势</span>
+          </div>
+          <% } else { %>
+          <% stats.days.forEach(function(d, i){ %>
+          <div class="bar-col">
+            <div class="v"><%= d.count %></div>
+            <div class="bar-track"><% if (d.count > 0) { %><div class="bar <%= i === 6 ? 'today' : '' %>" style="height:<%= Math.max(6, d.count / stats.maxDay * 88) %>%"></div><% } %></div>
+            <div class="x"><%= d.label %></div>
+          </div>
+          <% }) %>
+          <% } %>
+        </div>
+        <% if (stats.total > 0) { %>
+        <div class="chart-legend">
+          <% var sum = 0, peak = 0; stats.days.forEach(function(d){ sum += d.count; if (d.count > peak) peak = d.count; }); %>
+          <span><i></i>近 7 日 · 日均 <b><%= (sum / 7).toFixed(1) %></b> 次</span>
+          <span class="today"><i></i>今日 <b><%= stats.today %></b> 次</span>
+          <span>单日峰值 <b><%= peak %></b> 次</span>
+        </div>
+        <% } %>
+      </div>
+      <div class="panel">
+        <h2>系统信息</h2>
+        <div class="desc">运行环境、数据源与可用接口</div>
+        <div class="kv"><span>服务地址</span><code id="serviceUrl">http://localhost:<%= stats.port %>/dashboard</code></div>
+        <div class="kv"><span>数据来源</span><b>作品集埋点 · 5173</b></div>
+        <div class="kv"><span>存储模式</span><b class="pill"><%= stats.mode %></b></div>
+        <div class="kv"><span>持久化位置</span><code><%= stats.dataFile %></code></div>
+        <div class="kv"><span>页面渲染</span><b>EJS · layout</b></div>
+        <div class="kv"><span>健康检查</span><a href="/health" style="color:var(--accent);text-decoration:none">/health</a></div>
+        <div class="kv"><span>访问上报</span><code>POST /api/track</code></div>
+        <div class="kv"><span>最后刷新</span><b class="mono" id="clock">--:--:--</b></div>
+      </div>
+    </section>
+
+    <section class="panel" id="recent">
+      <h2>最近访问</h2>
+      <div class="desc">最新 6 条真实访问记录 · <a href="#visits" data-go-view="visits">查看全部记录</a></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>IP 地址</th><th>访问时间</th><th>页面路径</th><th>来源</th><th>状态</th></tr></thead>
+        <tbody>
+          <% if (stats.recent.length === 0) { %>
+          <tr class="empty-row"><td colspan="5"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>暂无访问记录 · 打开 <a href="http://localhost:5173/" data-portfolio-link>作品集站点</a> 后刷新</td></tr>
+          <% } else { %>
+          <% stats.recent.forEach(function(r){ %>
+          <tr>
+            <td class="mono"><%= r.ip %></td>
+            <td class="mono"><%= r.timestamp.toLocaleString('zh-CN', { hour12: false }) %></td>
+            <td class="mono p" title="<%= r.path %>"><%= r.path %></td>
+            <td><%= r.source %></td>
+            <td><span class="pill">已记录</span></td>
+          </tr>
+          <% }) %>
+          <% } %>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>共 <%= stats.total %> 条记录，展示最近 6 条</span><span><%= body %></span></div>
+    </section>
+  </div>
+
+  <!-- ───────── 视图 2：访问记录 ───────── -->
+  <div class="view" id="visits">
+    <section class="panel">
+      <h2>访问记录</h2>
+      <div class="desc">全部真实访问明细 · 按时间倒序，最多展示最近 200 条</div>
+      <div class="toolbar">
+        <input type="search" id="visitSearch" placeholder="按 IP / 路径 / 来源 / 时间筛选" autocomplete="off">
+        <span class="toolbar-count" id="visitCount">共 <%= stats.allVisits.length %> 条</span>
+        <button class="btn ghost" type="button" id="clearSearch">清除筛选</button>
+      </div>
+      <div class="table-scroll"><div class="table-wrap"><table class="table" id="visitTable">
+        <thead><tr><th>#</th><th>IP 地址</th><th>访问时间</th><th>页面路径</th><th>来源</th></tr></thead>
+        <tbody>
+          <% if (!stats.allVisits.length) { %>
+          <tr class="empty-row"><td colspan="5"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>暂无访问记录 · 打开 <a href="http://localhost:5173/" data-portfolio-link>作品集站点</a> 后刷新</td></tr>
+          <% } else { %>
+          <% stats.allVisits.forEach(function(r, i){ %>
+          <tr data-row data-search="<%= (r.ip + ' ' + r.path + ' ' + r.source + ' ' + r.time.toLocaleString('zh-CN', { hour12: false })).toLowerCase() %>">
+            <td class="mono"><%= i + 1 %></td>
+            <td class="mono"><%= r.ip %></td>
+            <td class="mono"><%= r.time.toLocaleString('zh-CN', { hour12: false }) %></td>
+            <td class="mono p" title="<%= r.path %>"><%= r.path %></td>
+            <td><%= r.source %></td>
+          </tr>
+          <% }) %>
+          <% } %>
+          <tr id="noMatch" class="empty-row" hidden><td colspan="5">没有匹配的记录，换个关键词试试</td></tr>
+        </tbody>
+      </table></div></div>
+      <div class="foot"><span>数据来自 <code>POST /api/track</code> 的真实上报，无任何模拟值</span><span>累计 <%= stats.total %> 条</span></div>
+    </section>
+  </div>
+
+  <!-- ───────── 视图 3：用户管理 ───────── -->
+  <div class="view" id="users">
+    <div class="panels">
+      <div class="panel">
+        <h2>用户管理</h2>
+        <div class="desc">已注册用户 · 仅显示用户名，密码以 bcrypt 哈希保存且不会在任何页面展示</div>
+        <div class="table-wrap"><table class="table">
+          <thead><tr><th>#</th><th>用户名</th><th>状态</th></tr></thead>
+          <tbody>
+            <% if (!stats.userList.length) { %>
+            <tr class="empty-row"><td colspan="3"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.4 3-5.6 7-5.6s7 2.2 7 5.6"/></svg></div>还没有注册用户 · 用「添加用户」表单创建第一个</td></tr>
+            <% } else { %>
+            <% stats.userList.forEach(function(u, i){ %>
+            <tr data-user-row>
+              <td class="mono"><%= i + 1 %></td>
+              <td class="mono"><%= u %></td>
+              <td><span class="pill">已启用</span></td>
+            </tr>
+            <% }) %>
+            <% } %>
+          </tbody>
+        </table></div>
+        <div class="foot"><span id="userCount">共 <%= stats.userList.length %> 个用户</span><span><a href="/api-explorer#endpoints">查看 /api/register 与 /api/login</a></span></div>
+      </div>
+      <div class="panel">
+        <h2>添加用户</h2>
+        <div class="desc">提交到 <code>POST /api/register</code>，创建后立即出现在左侧列表</div>
+        <form id="addUserForm" autocomplete="off">
+          <div class="form-field">
+            <label for="newUsername">用户名</label>
+            <input id="newUsername" name="username" type="text" placeholder="例如 admin" required autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="newPassword">密码</label>
+            <input id="newPassword" name="password" type="password" placeholder="至少 6 位" minlength="6" required autocomplete="new-password">
+          </div>
+          <button class="btn" type="submit" id="addUserBtn">创建用户</button>
+        </form>
+        <div class="form-msg" id="formMsg" hidden></div>
+        <div class="notice" style="margin:20px 0 0;padding:13px 15px;font-size:12px">
+          <div>当前后台仅在本机运行且未启用登录鉴权，请不要在此设置重要密码。创建成功后可用 <code>POST /api/login</code> 换取 JWT，再用 <code>Authorization: Bearer &lt;token&gt;</code> 访问 <code>/api/me</code>。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+var LABELS = { overview: '仪表盘', visits: '访问记录', users: '用户管理' };
+function currentView() {
+  var h = location.hash.slice(1);
+  return LABELS[h] ? h : 'overview';
+}
+function applyView() {
+  var v = currentView();
+  document.querySelectorAll('.view').forEach(function (el) { el.classList.toggle('on', el.id === v); });
+  document.querySelectorAll('.nav a[data-view]').forEach(function (a) {
+    a.classList.toggle('on', a.dataset.view === v);
+  });
+  var t = document.getElementById('viewTitle');
+  if (t) t.textContent = LABELS[v];
+  window.scrollTo(0, 0);
+}
+function goView(v, e) {
+  if (e) e.preventDefault();
+  if (!LABELS[v]) return;
+  if (location.hash !== '#' + v) history.pushState(null, '', '#' + v);
+  applyView();
+}
+document.querySelectorAll('.nav a[data-view], [data-go-view]').forEach(function (a) {
+  a.addEventListener('click', function (e) { goView(a.dataset.view || a.dataset.goView, e); });
+});
+window.addEventListener('popstate', applyView);
+window.addEventListener('hashchange', applyView);
+applyView();
+
+function tick(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('zh-CN', { hour12: false });
+}
+tick(); setInterval(tick, 1000);
+
+// 本机 / 局域网访问指向本地 5173 预览；公网访问指向已上线的 Cloudflare Pages 站点
+var localHost = /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
+var portfolioUrl = localHost
+  ? (location.protocol + '//' + location.hostname + ':5173/')
+  : 'https://portfolio-6zk.pages.dev/';
+document.querySelectorAll('[data-portfolio-link]').forEach(function(a){ a.href = portfolioUrl; });
+var serviceUrlEl = document.getElementById('serviceUrl');
+if (serviceUrlEl) serviceUrlEl.textContent = location.origin + '/dashboard';
+
+document.getElementById('trackBtn').addEventListener('click', function(){
+  window.open(portfolioUrl, '_blank');
+  const btn = this;
+  btn.textContent = '已打开 · 请刷新';
+  setTimeout(() => { btn.textContent = '打开作品集'; }, 2500);
+});
+
+/* 访问记录：前端即时筛选，不请求后端 */
+(function () {
+  var search = document.getElementById('visitSearch');
+  var count = document.getElementById('visitCount');
+  var noMatch = document.getElementById('noMatch');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#visitTable tbody tr[data-row]'));
+  function filter() {
+    var q = (search.value || '').trim().toLowerCase(), n = 0;
+    rows.forEach(function (r) {
+      var hit = !q || (r.dataset.search || '').indexOf(q) >= 0;
+      r.hidden = !hit;
+      if (hit) n++;
+    });
+    count.textContent = q ? '匹配 ' + n + ' / ' + rows.length + ' 条' : '共 ' + rows.length + ' 条';
+    noMatch.hidden = !(q && n === 0);
+  }
+  search.addEventListener('input', filter);
+  document.getElementById('clearSearch').addEventListener('click', function () {
+    search.value = ''; filter(); search.focus();
+  });
+})();
+
+/* 用户管理：调用真实注册接口，成功后刷新列表 */
+document.getElementById('addUserForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  var btn = document.getElementById('addUserBtn');
+  var msg = document.getElementById('formMsg');
+  var username = document.getElementById('newUsername').value.trim();
+  var password = document.getElementById('newPassword').value;
+  if (!username || !password) return;
+  btn.disabled = true; btn.textContent = '创建中…'; msg.hidden = true;
+  try {
+    var r = await fetch('/api/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username, password: password })
+    });
+    var j = await r.json();
+    if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+
+    /* 就地更新，不整页刷新：列表 / 计数 / 统计卡立即同步 */
+    var tbody = document.querySelector('#users .table tbody');
+    var empty = tbody.querySelector('.empty-row');
+    if (empty) empty.remove();
+    var n = tbody.querySelectorAll('tr[data-user-row]').length + 1;
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-user-row', '');
+    [String(n), username].forEach(function (v) {
+      var td = document.createElement('td'); td.className = 'mono'; td.textContent = v; tr.appendChild(td);
+    });
+    var tdState = document.createElement('td');
+    var pill = document.createElement('span'); pill.className = 'pill'; pill.textContent = '已启用';
+    tdState.appendChild(pill); tr.appendChild(tdState);
+    tbody.appendChild(tr);
+    document.getElementById('userCount').textContent = '共 ' + n + ' 个用户';
+    document.getElementById('userStatNum').textContent = n;
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    msg.className = 'form-msg ok'; msg.textContent = '已创建用户「' + username + '」，列表已更新。'; msg.hidden = false;
+  } catch (err) {
+    msg.className = 'form-msg bad'; msg.textContent = '创建失败：' + err.message; msg.hidden = false;
+  } finally {
+    btn.disabled = false; btn.textContent = '创建用户';
+  }
+});
+</script>
+<%- include('theme-ui') %>
+</body>
+</html>

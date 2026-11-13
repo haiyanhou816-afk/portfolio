@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
+<title>入口与安全监测 · Portfolio Admin</title>
+<%- include('theme-boot') %>
+<%- include('admin-style') %>
+<style>
+/* 本页专属组件：沿用同一套语义变量，日/夜主题自动适配 */
+.m-note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--accent-faint);color:var(--ink-2);font-size:12px;line-height:1.75;margin:0 0 18px}
+.m-note svg{flex:0 0 16px;margin-top:2px;color:var(--accent)}
+.m-note b{color:var(--ink)}
+.m-grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:16px}
+.m-grid3{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
+.m-panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:16px}
+.m-panel h2{font-size:15px;font-weight:650;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
+.m-panel .desc{font-size:11.5px;color:var(--muted);margin:5px 0 16px;line-height:1.6}
+.m-panel h2 .m-count{font-size:11px;font-weight:500;color:var(--faint);background:var(--fill-1);padding:2px 8px;border-radius:20px}
+.m-tag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--fill-1);color:var(--muted);white-space:nowrap}
+.m-tag.ok{background:var(--accent-soft);color:var(--accent-ink)}
+.m-tag.info{background:var(--accent-faint);color:var(--accent-ink)}
+.m-tag.bad{background:var(--danger-soft);color:var(--danger-ink-strong)}
+.m-tag.warn{background:var(--amber-soft);color:var(--ink-2)}
+.m-tag.muted{background:var(--fill-1);color:var(--muted)}
+.m-tag.violet{background:var(--accent-soft);color:var(--accent-ink)}
+.m-tag.amber{background:var(--amber-soft);color:var(--ink-2)}
+.m-tag i{width:5px;height:5px;border-radius:50%;background:currentColor;display:block}
+.m-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.m-kpi .stat .num.bad{color:var(--danger)}
+.m-kpi .stat .sub em{font-style:normal;color:var(--muted)}
+.m-stack{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:10px}
+.m-stack .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.m-stack .bars{width:100%;max-width:44px;display:flex;flex-direction:column-reverse;border-radius:5px;overflow:hidden;min-height:2px}
+.m-stack .seg{width:100%;display:block}
+.m-stack .seg.h{background:var(--accent)}
+.m-stack .seg.r{background:var(--fill-4)}
+.m-stack .seg.t{background:var(--danger)}
+.m-stack .x{font-size:10.5px;color:var(--faint)}
+.m-stack .v{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.m-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--muted)}
+.m-legend span{display:inline-flex;align-items:center;gap:6px}
+.m-legend i{width:9px;height:9px;border-radius:3px;display:block}
+.m-bar-row{display:grid;grid-template-columns:112px 1fr 62px;gap:10px;align-items:center;margin-bottom:11px;font-size:11.5px}
+.m-bar-row .name{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-bar-row .track{height:7px;border-radius:6px;background:var(--fill-1);overflow:hidden}
+.m-bar-row .track i{display:block;height:100%;background:var(--accent);border-radius:6px;min-width:2px}
+.m-bar-row .track i.soft{background:var(--fill-4)}
+.m-bar-row .num{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.m-tl{position:relative;padding-left:22px;margin-top:4px}
+.m-tl:before{content:'';position:absolute;left:5px;top:8px;bottom:10px;width:1px;background:var(--line)}
+.m-tl-item{position:relative;padding:0 0 18px 0}
+.m-tl-item:last-child{padding-bottom:2px}
+.m-tl-item:before{content:'';position:absolute;left:-21px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--card);box-shadow:0 0 0 2px var(--fill-4)}
+.m-tl-item.current:before{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.m-tl-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.m-tl-head code{font-size:12px;font-weight:600;color:var(--ink)}
+.m-tl-meta{font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;margin-top:5px}
+.m-tl-note{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:5px}
+.m-form{display:grid;grid-template-columns:1fr 1.6fr 1fr auto;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.m-form input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--fill-0);color:var(--ink);font-size:11.5px;font-family:inherit;outline:none}
+.m-form input:focus{border-color:var(--accent)}
+.m-form .btn{white-space:nowrap}
+.m-msg{grid-column:1/-1;font-size:11px;color:var(--muted);min-height:14px}
+.m-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.m-filter button{font:inherit;font-size:11px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--fill-0);color:var(--muted);cursor:pointer}
+.m-filter button.on{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.m-filter button:hover{border-color:var(--accent)}
+.m-log td{font-size:11px;vertical-align:top}
+.m-log .mono{font-size:10.5px;word-break:break-all}
+.m-log tr.sev3{background:var(--danger-soft)}
+.m-log tr.sev2{background:var(--amber-soft)}
+.m-log .why{color:var(--muted);font-size:10.5px;line-height:1.5;max-width:220px}
+.m-log .ua{color:var(--faint);font-size:10px;line-height:1.45;max-width:230px;word-break:break-all}
+.m-risk{font-variant-numeric:tabular-nums;font-weight:600;color:var(--danger-ink-strong)}
+.m-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.m-rule{padding:12px 14px;border-radius:12px;background:var(--fill-0);box-shadow:var(--hairline)}
+.m-rule b{font-size:11.5px;display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.m-rule p{font-size:10.5px;color:var(--muted);line-height:1.65}
+.m-code{margin-top:10px}
+.m-code pre{background:var(--fill-0);border:1px solid var(--line-soft);border-radius:12px;padding:14px 16px;overflow:auto;max-height:290px;font:11px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);white-space:pre}
+.m-code summary{cursor:pointer;font-size:11.5px;color:var(--accent-ink);padding:6px 0}
+.m-code .hint{font-size:10.5px;color:var(--muted);line-height:1.7;margin:8px 0}
+.m-empty{padding:26px 0;text-align:center;color:var(--faint);font-size:11.5px;line-height:1.8}
+@media(max-width:1100px){.m-grid2,.m-grid3{grid-template-columns:1fr}.m-kpi{grid-template-columns:repeat(2,1fr)}.m-form{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<% var d = data; %>
+<% var beaconCode = [
+'<meta name="app-version" content="' + (d.currentVersion || 'b73c7e0') + '">',
+'<script>',
+'(function () {',
+'  var endpoint = ' + JSON.stringify(endpoint) + ';',
+'  var meta = document.querySelector(\'meta[name="app-version"]\');',
+'  var q = new URLSearchParams(location.search);',
+'  var payload = JSON.stringify({',
+'    path: location.pathname + location.search,',
+'    url: location.href,',
+'    landing: location.pathname,',
+'    referrer: document.referrer || "",',
+'    userAgent: navigator.userAgent,',
+'    source: "portfolio-online",',
+'    version: meta ? meta.getAttribute("content") : "",',
+'    utm_source: q.get("utm_source") || "",',
+'    utm_medium: q.get("utm_medium") || "",',
+'    utm_campaign: q.get("utm_campaign") || "",',
+'    utm_term: q.get("utm_term") || ""',
+'  });',
+'  function send() {',
+'    try {',
+'      if (navigator.sendBeacon) {',
+'        navigator.sendBeacon(endpoint, new Blob([payload], { type: "text/plain" }));',
+'      } else {',
+'        fetch(endpoint, { method: "POST", headers: { "Content-Type": "text/plain" },',
+'          body: payload, keepalive: true, mode: "cors", credentials: "omit" });',
+'      }',
+'    } catch (e) {}',
+'  }',
+'  if (document.readyState === "complete") send();',
+'  else window.addEventListener("load", send, { once: true });',
+'})();',
+'</script>'
+].join('\n'); %>
+<% var workerCode = [
+'// Cloudflare Worker：把不执行 JS 的爬虫 / 扫描请求转发给监测后台',
+'// 路由绑定到作品集站点即可；正常浏览器流量仍由 Cloudflare beacon 统计',
+'export default {',
+'  async fetch(request, env, ctx) {',
+'    const url = new URL(request.url);',
+'    const response = await fetch(request);',
+'    const ua = request.headers.get("user-agent") || "";',
+'    const raw = decodeURIComponent(url.pathname + url.search);',
+'    const suspicious = /bot|spider|crawl|curl|python|headless|sqlmap|nikto|gobuster|wget/i.test(ua)',
+'      || /\\/\\.env|\\/\\.git|wp-admin|phpmyadmin|union\\s+select|<script|\\.\\.\\//i.test(raw);',
+'    if (suspicious) {',
+'      const log = {',
+'        path: url.pathname + url.search, url: request.url, method: request.method,',
+'        status: response.status, userAgent: ua,',
+'        referrer: request.headers.get("referer") || "",',
+'        ip: request.headers.get("cf-connecting-ip") || "",',
+'        host: url.hostname, version: ' + JSON.stringify(d.currentVersion || 'b73c7e0'),
+'      };',
+'      ctx.waitUntil(fetch(' + JSON.stringify(edgeEndpoint) + ', {',
+'        method: "POST", headers: { "Content-Type": "application/json" },',
+'        body: JSON.stringify(log)',
+'      }));',
+'    }',
+'    return response;',
+'  }',
+'};'
+].join('\n'); %>
+
+<aside class="side">
+  <div class="logo">
+    <div class="logo-mark">P</div>
+    <div><b>Portfolio Admin</b><small>管理后台 · v1.1</small></div>
+  </div>
+  <div class="nav-label">监测</div>
+  <nav class="nav">
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
+    <a class="on" href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+  </nav>
+  <div class="nav-label">系统</div>
+  <nav class="nav">
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+  </nav>
+  <div class="side-foot">
+    <div class="live"><i></i>服务运行中</div>
+    端口 <%= port %> · 本地 JSON 持久化
+  </div>
+</aside>
+
+<main class="main">
+  <header class="top">
+    <div class="crumb">监测 / <b>入口与安全</b></div>
+    <div class="top-actions">
+      <div class="badge <%= d.threats ? 'warn' : '' %>"><i></i><%= d.threats ? d.threats + ' 条待关注请求' : '暂无威胁请求' %></div>
+      <button class="btn ghost" onclick="location.reload()">刷新</button>
+      <a class="btn" href="/online">线上站点</a>
+    </div>
+  </header>
+
+  <div class="source-tabs">
+    <a href="/online">线上站点 · Cloudflare</a>
+    <a class="on" href="/monitor">入口与安全 · 规则识别</a>
+    <a href="/dashboard">本地预览 · 埋点</a>
+    <a href="/health">健康检查</a>
+    <a href="/api-explorer">API 数据</a>
+  </div>
+
+  <div class="m-note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    <div><b>这里全部是真实数据，没有任何模拟访问。</b> 数据来自两处：作品集前端 beacon 上报（含来源与版本），以及打到本服务的每一个 HTTP 请求（含被访问密码挡下的扫描）。静态站点上不执行 JS 的爬虫，需按页面底部说明接入 Cloudflare Worker 才能进明细。明细含 IP，本页受访问密码保护。</div>
+  </div>
+
+  <section class="grid m-kpi">
+    <div class="stat">
+      <div class="label">入口请求总数</div>
+      <div class="num mono"><%= d.total %></div>
+      <div class="sub"><em>埋点 + 服务请求</em> · 实时累计</div>
+    </div>
+    <div class="stat">
+      <div class="label">真人访客</div>
+      <div class="num mono"><%= d.humans %></div>
+      <div class="sub"><em>已剔除机器人</em> · 来源分析基准</div>
+    </div>
+    <div class="stat">
+      <div class="label">爬虫 / 机器人</div>
+      <div class="num mono"><%= d.robots %></div>
+      <div class="sub"><em>搜索 <%= d.kinds.crawler %> · AI <%= d.kinds.ai %> · 工具 <%= d.kinds.bot %></em></div>
+    </div>
+    <div class="stat">
+      <div class="label">可疑 / 攻击请求</div>
+      <div class="num mono <%= d.threats ? 'bad' : '' %>"><%= d.threats %></div>
+      <div class="sub"><em>攻击尝试 <%= d.kinds.attack %> · 可疑 <%= d.kinds.suspicious %></em></div>
+    </div>
+  </section>
+
+  <section class="m-panel">
+    <h2>近 7 天入口构成 <span class="m-count">按识别结果堆叠</span></h2>
+    <div class="desc">蓝色为真人，灰色为爬虫与自动化工具，红色为可疑 / 攻击请求；健康探针单列，不计入真人。</div>
+    <div class="m-stack">
+      <% d.days.forEach(function(day){ var sum = day.human + day.robot + day.threat; %>
+      <div class="col">
+        <div class="v"><%= sum %></div>
+        <div class="bars" style="height:<%= Math.max(2, sum / d.maxDay * 88) %>%">
+          <span class="seg h" style="height:<%= sum ? day.human / sum * 100 : 0 %>%" title="真人 <%= day.human %>"></span>
+          <span class="seg r" style="height:<%= sum ? day.robot / sum * 100 : 0 %>%" title="机器人 <%= day.robot %>"></span>
+          <span class="seg t" style="height:<%= sum ? day.threat / sum * 100 : 0 %>%" title="威胁 <%= day.threat %>"></span>
+        </div>
+        <div class="x"><%= day.label %></div>
+      </div>
+      <% }) %>
+    </div>
+    <div class="m-legend">
+      <span><i style="background:var(--accent)"></i>真人访客</span>
+      <span><i style="background:var(--fill-4)"></i>爬虫 / 自动化</span>
+      <span><i style="background:var(--danger)"></i>可疑 / 攻击</span>
+      <span>探针 <%= d.kinds.probe %> 次已单列</span>
+    </div>
+  </section>
+
+  <section class="m-panel" id="releases">
+    <h2>版本迭代时间线 <span class="m-count"><%= d.releases.length %> 个版本</span></h2>
+    <div class="desc">初始记录来自作品集仓库真实的 git 提交；之后每次部署可登记，前端上报陌生版本时也会自动登记一条「首次观测」。访问量按埋点里的 app-version 统计。</div>
+    <div class="m-grid2" style="margin-bottom:0">
+      <div>
+        <% if (!d.releases.length) { %>
+        <div class="m-empty">还没有版本记录。接入下方 beacon 代码并开始上报后，会自动生成第一条。</div>
+        <% } else { %>
+        <div class="m-tl">
+          <% d.releases.slice(0, 12).forEach(function(r){ %>
+          <div class="m-tl-item <%= r.current ? 'current' : '' %>">
+            <div class="m-tl-head">
+              <code><%= r.version %></code>
+              <% if (r.current) { %><span class="m-tag ok"><i></i>当前版本</span><% } %>
+              <span class="m-tag muted"><%= r.source === 'git' ? 'git 提交' : (r.source === 'auto' ? '自动登记' : '手动登记') %></span>
+              <% if (r.visits) { %><span class="m-tag info">该版本 <%= r.visits %> 次访问</span><% } %>
+            </div>
+            <div class="m-tl-meta"><%= r.deployedAt.toLocaleString('zh-CN', { hour12: false }) %><%= r.last ? ' · 最近上报 ' + r.last.toLocaleString('zh-CN', { hour12: false }) : '' %></div>
+            <div class="m-tl-note"><%= r.note || '（无变更说明）' %></div>
+          </div>
+          <% }) %>
+        </div>
+        <% } %>
+      </div>
+      <div>
+        <% if (d.extraVersions.length) { %>
+        <div class="desc" style="margin-top:0"><b>已上报但未登记发布信息的版本</b></div>
+        <% d.extraVersions.forEach(function(v){ %>
+        <div class="m-bar-row">
+          <div class="name mono"><%= v.version %></div>
+          <div class="track"><i style="width:<%= Math.max(4, v.visits / Math.max(1, d.extraVersions[0].visits) * 100) %>%"></i></div>
+          <div class="num"><%= v.visits %> 次</div>
+        </div>
+        <% }) %>
+        <% } %>
+        <div class="m-rules" style="margin-top:6px">
+          <div class="m-rule">
+            <b>自动登记</b>
+            <p>前端上报的 version 不在时间线里时，自动补一条「首次观测」记录，版本号与发布时间以第一次上报为准。</p>
+          </div>
+          <div class="m-rule">
+            <b>手动登记 / CI</b>
+            <p>部署脚本里 POST 一次 <code>/api/releases</code> 即可带上变更说明与 commit，版本号相同则更新原记录。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <form class="m-form" id="releaseForm">
+      <input name="version" placeholder="版本号，如 b73c7e0" required>
+      <input name="note" placeholder="本次变更说明">
+      <input name="commit" placeholder="commit（可选）">
+      <button class="btn" type="submit">登记版本</button>
+      <div class="m-msg" id="releaseMsg"></div>
+    </form>
+  </section>
+
+  <section class="m-panel" id="sources">
+    <h2>访客从哪里进来 <span class="m-count">真人 <%= d.humans %> 次</span></h2>
+    <div class="desc">按 referrer、UTM 参数与广告点击标识（gclid / fbclid）归类；只统计真人，爬虫与扫描不会污染渠道数据。Cloudflare 侧的来源榜在 <a href="/online" style="color:var(--accent);text-decoration:none">/online</a>。</div>
+    <div class="m-grid2" style="margin-bottom:0">
+      <div>
+        <div class="desc" style="margin:0 0 12px"><b>来源渠道分布</b></div>
+        <% if (!d.humans) { %>
+        <div class="m-empty">还没有真人访问记录。<br>接入下方 beacon 代码后，渠道分布会自动出现。</div>
+        <% } else { %>
+        <% d.channels.forEach(function(c){ %>
+        <div class="m-bar-row" title="<%= c.desc %>">
+          <div class="name"><span class="m-tag <%= c.tone %>"><i></i><%= c.label %></span></div>
+          <div class="track"><i class="<%= c.key === 'direct' || c.key === 'unknown' ? 'soft' : '' %>" style="width:<%= c.count ? Math.max(2, c.pct) : 0 %>%"></i></div>
+          <div class="num"><%= c.count %> · <%= c.pct %>%</div>
+        </div>
+        <% }) %>
+        <% } %>
+      </div>
+      <div>
+        <div class="desc" style="margin:0 0 12px"><b>具体来源 / 落地页</b></div>
+        <% if (!d.sources.length) { %>
+        <div class="m-empty">暂无来源数据</div>
+        <% } else { %>
+        <% d.sources.forEach(function(s){ %>
+        <div class="kv"><span title="<%= s.host %>"><%= s.host %></span><b><%= s.count %> 次 · <%= s.channel %></b></div>
+        <% }) %>
+        <% } %>
+        <div class="desc" style="margin:16px 0 8px"><b>热门落地页</b></div>
+        <% if (!d.landings.length) { %><div class="m-empty" style="padding:10px 0">暂无落地页数据</div><% } %>
+        <% d.landings.slice(0, 5).forEach(function(l){ %>
+        <div class="kv"><span class="mono" title="<%= l.path %>"><%= l.path %></span><b><%= l.count %> 次</b></div>
+        <% }) %>
+        <% if (d.campaigns.length) { %>
+        <div class="desc" style="margin:16px 0 8px"><b>UTM 投放 / 活动</b></div>
+        <% d.campaigns.forEach(function(c){ %><div class="kv"><span><%= c.name %></span><b><%= c.count %> 次</b></div><% }) %>
+        <% } %>
+        <% if (d.engines.length) { %>
+        <div class="desc" style="margin:16px 0 8px"><b>搜索引擎</b></div>
+        <% d.engines.forEach(function(e){ %><div class="kv"><span><%= e.name %></span><b><%= e.count %> 次</b></div><% }) %>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <section class="m-panel" id="threats">
+    <h2>爬虫与黑客标记 <span class="m-count">最近 <%= d.recentRows.length %> 条明细</span></h2>
+    <div class="desc">灰色＝搜索/AI 爬虫与自动化工具，橙色＝可疑扫描，红色＝注入或黑客工具攻击；风险分与命中原因一并保留，方便回溯。</div>
+    <div class="m-filter" id="filterBar">
+      <button class="on" data-filter="all">全部</button>
+      <button data-filter="human">真人</button>
+      <button data-filter="crawler">搜索爬虫</button>
+      <button data-filter="ai">AI 爬虫</button>
+      <button data-filter="bot">自动化工具</button>
+      <button data-filter="threat">可疑 / 攻击</button>
+    </div>
+    <div class="table-wrap"><table class="table m-log">
+      <thead><tr><th>时间</th><th>IP</th><th>标记</th><th>来源</th><th>路径 / UA</th><th>命中原因</th><th>风险</th></tr></thead>
+      <tbody id="logBody">
+        <% if (!d.recentRows.length) { %>
+        <tr class="empty-row"><td colspan="7"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>还没有任何访问记录</td></tr>
+        <% } else { %>
+        <% d.recentRows.forEach(function(e){ %>
+        <tr class="sev<%= e.severity %>" data-kind="<%= e.kind %>" data-severity="<%= e.severity %>">
+          <td class="mono" style="white-space:nowrap"><%= e.time.toLocaleString('zh-CN', { hour12: false }) %></td>
+          <td class="mono"><%= e.ip %></td>
+          <td><span class="m-tag <%= e.tone %>"><i></i><%= e.label %></span><% if (e.botName) { %><div class="why" style="margin-top:4px"><%= e.botName %></div><% } %></td>
+          <td><%= e.channelLabel %><% if (e.sourceHost) { %><div class="why"><%= e.sourceHost %></div><% } %></td>
+          <td><div class="mono" title="<%= e.path %>"><%= e.path %></div><div class="ua"><%= e.userAgent || '（无 UA）' %></div></td>
+          <td class="why"><%= e.reasons.length ? e.reasons.join('；') : '—' %></td>
+          <td><% if (e.severity >= 2) { %><span class="m-risk"><%= e.risk %></span><% } else { %><span style="color:var(--faint)">—</span><% } %></td>
+        </tr>
+        <% }) %>
+        <% } %>
+      </tbody>
+    </table></div>
+    <div class="foot"><span>标记规则固定且可复核，命中依据写在明细里</span><span>仅展示最近 40 条 · 全量保存在 data/store.json</span></div>
+  </section>
+
+  <section class="m-grid3">
+    <div class="m-panel">
+      <h2>机器人榜</h2>
+      <div class="desc">按 UA 识别出的具体名称与访问次数</div>
+      <% if (!d.bots.length) { %><div class="m-empty">暂未识别到机器人</div><% } %>
+      <% d.bots.forEach(function(b){ %>
+      <div class="kv"><span><span class="m-tag <%= b.tone %>" style="margin-right:6px"><i></i><%= b.label %></span><%= b.name %></span><b><%= b.count %> 次</b></div>
+      <% }) %>
+    </div>
+    <div class="m-panel">
+      <h2>识别规则</h2>
+      <div class="desc">命中即标记，不做拦截，避免误伤正常访客</div>
+      <div class="m-rules" style="grid-template-columns:1fr">
+        <% rules.forEach(function(r){ %>
+        <div class="m-rule"><b><span class="m-tag <%= r.tone %>"><i></i><%= r.name %></span></b><p><%= r.detail %></p></div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <section class="m-panel" id="setup">
+    <h2>接入方式</h2>
+    <div class="desc">端点已按当前访问地址生成：<code id="endpointText"><%= endpoint %></code>。把下面第一段放进作品集 HTML 即可开始记录来源与版本；第二段可选，用来抓不执行 JS 的爬虫。</div>
+    <div class="m-code">
+      <div class="desc" style="margin:0"><b>① 前端 beacon（来源 + 版本）</b> · 粘贴到 <code>index.html</code> 的 <code>&lt;body&gt;</code> 末尾，部署时把 meta 里的 app-version 换成当前版本号。</div>
+      <pre id="beaconCode"><%= beaconCode %></pre>
+      <button class="btn ghost mini-btn" onclick="copyCode('beaconCode', this)">复制代码</button>
+      <div class="hint">上报内容为 text/plain + sendBeacon，不触发预检，不影响页面加载；服务端从连接取真实 IP，不信任前端传参。同一 IP 每分钟超过 120 次会被限流丢弃。</div>
+      <details>
+        <summary>② 可选：Cloudflare Worker 边缘日志（抓不执行 JS 的爬虫 / 扫描）</summary>
+        <div class="hint">静态站点上的 curl、sqlmap、目录爆破不会执行 JS，前端 beacon 看不到。给作品集站点绑定一个 Worker 路由，把这类请求转发到 <code id="edgeEndpointText"><%= edgeEndpoint %></code> 即可进入上方的标记明细。正常浏览器流量仍由 Cloudflare Web Analytics 统计，不重复计入。</div>
+        <pre id="workerCode"><%= workerCode %></pre>
+        <button class="btn ghost mini-btn" onclick="copyCode('workerCode', this)">复制 Worker 代码</button>
+      </details>
+      <div class="hint" style="margin-top:12px">也可以直接在部署脚本里登记版本：<code>curl -X POST &lt;本后台&gt;/api/releases -H "Content-Type: application/json" -d '{"version":"b73c7e0","note":"本次改动"}'</code></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* 平台网关可能在转发前消费 sharecode，服务端读不到 URL 参数。
+   浏览器地址栏通常仍保留它：这里把两段接入代码里的端点统一补成可直接使用的完整上报地址。 */
+(function () {
+  try {
+    var sc = new URLSearchParams(location.search).get('sharecode');
+    if (!sc) return;
+    var fix = function (url) {
+      var clean = String(url).split('?')[0];
+      return clean + '?sharecode=' + encodeURIComponent(sc);
+    };
+    var ep = document.getElementById('endpointText');
+    var edge = document.getElementById('edgeEndpointText');
+    if (ep) ep.textContent = fix(ep.textContent);
+    if (edge) edge.textContent = fix(edge.textContent);
+    var re = /("https?:\/\/[^"']*\/api\/(?:track|edge-log))(?:\?sharecode=[^"']*)?(")/g;
+    ['beaconCode', 'workerCode'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = el.textContent.replace(re, function (m, a, b) {
+        return a.split('?')[0] + '?sharecode=' + encodeURIComponent(sc) + b;
+      });
+    });
+  } catch (e) {}
+})();
+function copyCode(id, btn) {
+  var text = document.getElementById(id).textContent;
+  var done = function () { var old = btn.textContent; btn.textContent = '已复制'; setTimeout(function(){ btn.textContent = old; }, 1600); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text, done); });
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  var ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+document.querySelectorAll('#filterBar button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('#filterBar button').forEach(function (b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+    var f = btn.dataset.filter;
+    document.querySelectorAll('#logBody tr[data-kind]').forEach(function (tr) {
+      var show = f === 'all' || tr.dataset.kind === f ||
+        (f === 'threat' && Number(tr.dataset.severity) >= 2);
+      tr.style.display = show ? '' : 'none';
+    });
+  });
+});
+var sc = new URLSearchParams(location.search).get('sharecode');
+document.getElementById('releaseForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  var msg = document.getElementById('releaseMsg');
+  var fd = new FormData(e.target);
+  var body = {
+    version: (fd.get('version') || '').trim(),
+    note: (fd.get('note') || '').trim(),
+    commit: (fd.get('commit') || '').trim()
+  };
+  if (!body.version) { msg.textContent = '请填写版本号'; return; }
+  var url = '/api/releases' + (sc ? '?sharecode=' + encodeURIComponent(sc) : '');
+  msg.textContent = '正在登记…';
+  try {
+    var r = await fetch(url, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    msg.textContent = '已登记 ' + body.version + '，正在刷新…';
+    setTimeout(function () { location.reload(); }, 700);
+  } catch (err) {
+    msg.textContent = '登记失败：' + err.message + '（若提示需要访问密码，请先完成解锁）';
+  }
+});
+</script>
+<%- include('theme-ui') %>
+</body>
+</html>

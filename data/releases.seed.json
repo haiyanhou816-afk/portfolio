@@ -1,0 +1,72 @@
+[
+  {
+    "version": "b73c7e0",
+    "note": "关闭雪花鼠标视差，背景保持静止飘落（来源：作品集仓库 git 提交）",
+    "commit": "b73c7e0",
+    "deployedAt": "2026-11-13T18:08:12+08:00",
+    "source": "git"
+  },
+  {
+    "version": "7c427db",
+    "note": "灵感宝库加入像素雪背景，PixelSnow 支持 wind/sway/glow/fade/pixelSize/鼠标视差",
+    "commit": "7c427db",
+    "deployedAt": "2026-11-13T17:55:51+08:00",
+    "source": "git"
+  },
+  {
+    "version": "d74025f",
+    "note": "删除图片改用 HoldButton 长按确认",
+    "commit": "d74025f",
+    "deployedAt": "2026-11-13T17:39:59+08:00",
+    "source": "git"
+  },
+  {
+    "version": "b34a185",
+    "note": "不再跟踪本地备份文件 SphericalGallery_20260725",
+    "commit": "b34a185",
+    "deployedAt": "2026-11-13T17:26:16+08:00",
+    "source": "git"
+  },
+  {
+    "version": "5ffb631",
+    "note": "撤掉 DriftWall 图墙，恢复原瀑布流布局",
+    "commit": "5ffb631",
+    "deployedAt": "2026-11-13T17:25:59+08:00",
+    "source": "git"
+  },
+  {
+    "version": "a85d16e",
+    "note": "灵感宝库改用 3D 漂移图墙展示",
+    "commit": "a85d16e",
+    "deployedAt": "2026-11-13T17:21:38+08:00",
+    "source": "git"
+  },
+  {
+    "version": "8e06dd0",
+    "note": "头部提示图标由 emoji 改为站点统一的线性图标",
+    "commit": "8e06dd0",
+    "deployedAt": "2026-11-13T16:19:35+08:00",
+    "source": "git"
+  },
+  {
+    "version": "ead48a2",
+    "note": "修正精选项目区块标题字体与字号不一致",
+    "commit": "ead48a2",
+    "deployedAt": "2026-11-13T14:47:52+08:00",
+    "source": "git"
+  },
+  {
+    "version": "d755f6d",
+    "note": "GLSL3 片元着色器改用自定义 out 变量，修复编译失败",
+    "commit": "d755f6d",
+    "deployedAt": "2026-11-08T21:09:07+08:00",
+    "source": "git"
+  },
+  {
+    "version": "39d780e",
+    "note": "加入 Cloudflare Web Analytics beacon 与本地预览埋点",
+    "commit": "39d780e",
+    "deployedAt": "2026-11-08T20:40:26+08:00",
+    "source": "git"
+  }
+]

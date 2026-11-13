@@ -1,0 +1,121 @@
+<script>
+/* 外观引擎：在任何样式绘制前应用，避免昼夜切换闪白。
+   两个页面共用；所有可调项都写入 <html> 的 CSS 变量，纯前端，不依赖后端。 */
+(function () {
+  'use strict';
+  var KEY = 'portfolio-admin-appearance-v1';
+  var DEFAULTS = { mode: 'auto', depth: 6, tone: 'neutral', accent: null };
+  var root = document.documentElement;
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  var subs = [];
+  var timer = null;
+
+  function normalize(s) {
+    var out = {};
+    Object.keys(DEFAULTS).forEach(function (k) { out[k] = DEFAULTS[k]; });
+    if (s && typeof s === 'object') {
+      Object.keys(DEFAULTS).forEach(function (k) { if (k in s) out[k] = s[k]; });
+    }
+    if (['light', 'night', 'auto'].indexOf(out.mode) < 0) out.mode = DEFAULTS.mode;
+    out.depth = Math.max(3, Math.min(14, Math.round(Number(out.depth) || 6)));
+    if (['neutral', 'cool', 'warm'].indexOf(out.tone) < 0) out.tone = DEFAULTS.tone;
+    if (out.accent !== null && !/^#[0-9a-f]{6}$/i.test(String(out.accent))) out.accent = null;
+    return out;
+  }
+  function read() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    return normalize(raw);
+  }
+  var state = read();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function effective() {
+    return state.mode === 'auto' ? (mq && mq.matches ? 'night' : 'light') : state.mode;
+  }
+  function rgb(c) {
+    var h = c.replace('#', '');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function byte(v) { return ('0' + Math.round(Math.max(0, Math.min(255, v))).toString(16)).slice(-2); }
+  function toHex(a) { return '#' + a.map(byte).join(''); }
+  function mix(a, b, t) {
+    var x = rgb(a), y = rgb(b);
+    return toHex([0, 1, 2].map(function (i) { return x[i] + (y[i] - x[i]) * t; }));
+  }
+  function rgba(c, a) { var x = rgb(c); return 'rgba(' + x[0] + ',' + x[1] + ',' + x[2] + ',' + a + ')'; }
+  function luma(c) { var x = rgb(c); return (x[0] * .2126 + x[1] * .7152 + x[2] * .0722) / 255; }
+  function hslHex(h, s, l) {
+    s /= 100; l /= 100;
+    var a = s * Math.min(l, 1 - l);
+    function f(n) { var k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); }
+    return toHex([f(0), f(8), f(4)].map(function (v) { return v * 255; }));
+  }
+  function animate() {
+    if (timer) clearTimeout(timer);
+    root.classList.add('theme-switching');
+    timer = setTimeout(function () { root.classList.remove('theme-switching'); timer = null; }, 340);
+  }
+  function apply(silent) {
+    var dark = effective() === 'night';
+    root.setAttribute('data-theme', dark ? 'night' : 'light');
+    root.style.colorScheme = dark ? 'dark' : 'light';
+    var themeBg = '#f5f5f7';
+    if (dark) {
+      /* 夜间深度 3–14 控制背景亮度；底色色调改变 HSL 色相与饱和度 */
+      var tone = { neutral: [240, 6], cool: [220, 18], warm: [28, 9] }[state.tone];
+      var bg = hslHex(tone[0], tone[1], state.depth);
+      var card = hslHex(tone[0], Math.max(3, tone[1] - 1), Math.min(24, state.depth + 6));
+      var side = hslHex(tone[0], tone[1], Math.min(22, state.depth + 4));
+      var pop = hslHex(tone[0], tone[1], Math.min(26, state.depth + 11));
+      root.style.setProperty('--bg', bg);
+      root.style.setProperty('--card', card);
+      root.style.setProperty('--side-bg', rgba(side, .82));
+      root.style.setProperty('--pop-bg', rgba(pop, .92));
+      themeBg = bg;
+    } else {
+      ['--bg', '--card', '--side-bg', '--pop-bg'].forEach(function (v) { root.style.removeProperty(v); });
+    }
+    var accent = state.accent || (dark ? '#0a84ff' : '#0071e3');
+    root.style.setProperty('--accent', accent);
+    root.style.setProperty('--accent-ink', mix(accent, dark ? '#ffffff' : '#000000', dark ? .22 : .20));
+    root.style.setProperty('--accent-soft', rgba(accent, dark ? .20 : .10));
+    root.style.setProperty('--accent-faint', rgba(accent, dark ? .12 : .055));
+    root.style.setProperty('--accent-clear', rgba(accent, 0));
+    root.style.setProperty('--on-accent', luma(accent) > .62 ? '#1d1d1f' : '#ffffff');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', themeBg);
+    subs.forEach(function (fn) { try { fn(state, dark); } catch (e) {} });
+    if (!silent) animate();
+  }
+
+  window.PortfolioTheme = {
+    get state() { var o = {}; Object.keys(DEFAULTS).forEach(function (k) { o[k] = state[k]; }); return o; },
+    get dark() { return effective() === 'night'; },
+    get effective() { return effective(); },
+    set: function (patch) {
+      state = normalize(Object.assign({}, state, patch || {}));
+      save(); apply();
+    },
+    reset: function () {
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      state = normalize(null); apply();
+    },
+    onChange: function (fn) {
+      subs.push(fn);
+      try { fn(state, effective() === 'night'); } catch (e) {}
+      return function () { subs = subs.filter(function (f) { return f !== fn; }); };
+    },
+    apply: function () { apply(); }
+  };
+
+  apply(true); /* 首屏静默应用 */
+  if (mq) {
+    var onSystem = function () { if (state.mode === 'auto') apply(); };
+    if (mq.addEventListener) mq.addEventListener('change', onSystem);
+    else if (mq.addListener) mq.addListener(onSystem);
+  }
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) { state = read(); apply(); }
+  });
+})();
+</script>

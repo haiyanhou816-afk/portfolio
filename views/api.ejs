@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
+<title>API 数据 · Portfolio Admin</title>
+<%- include('theme-boot') %>
+<%- include('admin-style') %>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">
+    <div class="logo-mark">P</div>
+    <div><b>Portfolio Admin</b><small>管理后台 · v1.0</small></div>
+  </div>
+  <div class="nav-label">监测</div>
+  <nav class="nav">
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
+  </nav>
+  <div class="nav-label">系统</div>
+  <nav class="nav">
+    <a class="on" href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+  </nav>
+  <div class="side-foot">
+    <div class="live"><i></i>服务运行中</div>
+    端口 <%= port %> · 实时接口状态
+  </div>
+</aside>
+
+<main class="main">
+  <header class="top">
+    <div class="crumb">系统 / <b>API 数据</b></div>
+    <div class="top-actions">
+      <div class="badge <%= hasError ? 'warn' : '' %>"><i></i><%= hasError ? '1 项拉取失败' : '接口正常' %></div>
+      <button class="btn ghost" onclick="location.href='/health'">健康检查</button>
+      <button class="btn" onclick="location.reload()">刷新响应</button>
+    </div>
+  </header>
+
+  <div class="source-tabs">
+    <a href="/online">线上站点 · Cloudflare</a>
+    <a href="/monitor">入口与安全</a>
+    <a href="/dashboard">本地预览 · 埋点</a>
+    <a href="/health">健康检查</a>
+    <a class="on" href="/api-explorer">API 数据</a>
+    <a href="/setup">数据源配置</a>
+  </div>
+
+  <div class="health-hero <%= hasError ? 'bad' : '' %>" id="overview">
+    <div class="hc-mark">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>
+    </div>
+    <div class="hc-body">
+      <div class="eyebrow">API explorer · <%= endpoints.length %> endpoints</div>
+      <h2><%= hasError ? '接口可用 · 数据拉取失败' : '所有接口正常' %></h2>
+      <p>每个接口都实时返回有效响应。<code>ok:false</code>、<code>configured:false</code>、<code>missing</code> 描述的是「Cloudflare 尚未配置」这一数据状态，不是接口报错；<code>error:null</code> 表示没有异常。</p>
+    </div>
+    <div class="hc-meta">
+      检测时间<br><b class="mono"><%= checkedAt.toLocaleString('zh-CN', { hour12: false }) %></b><br>端口 <%= port %>
+    </div>
+  </div>
+
+  <section class="grid">
+    <div class="stat">
+      <div class="label">接口总数 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span></div>
+      <div class="num mono"><%= counts.total %></div>
+      <div class="sub">GET 与 POST 全部在列</div>
+    </div>
+    <div class="stat">
+      <div class="label">正常可用 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.3 2.3 4.7-4.9"/></svg></span></div>
+      <div class="num mono"><%= counts.ok %></div>
+      <div class="sub">HTTP 200，无需额外配置</div>
+    </div>
+    <div class="stat">
+      <div class="label">待配置 / 提示 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></svg></span></div>
+      <div class="num mono"><%= counts.warn + counts.info %></div>
+      <div class="sub">可选配置与需鉴权接口</div>
+    </div>
+    <div class="stat">
+      <div class="label">累计真实访问 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span></div>
+      <div class="num mono"><%= stats.total %></div>
+      <div class="sub">来自 /api/track 上报</div>
+    </div>
+  </section>
+
+  <div class="notice">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    <div>
+      <b>这一栏之前看起来像报错，是因为它直接打开了一整页裸 JSON。</b>
+      现在改为可读控制台：接口状态、字段含义与格式化响应都在这里；需要原始数据时点「原始 JSON」或用 curl，接口返回的 JSON 契约没有改变。
+      <% if (!cf.configured) { %>
+      目前 <code>/api/cloudflare</code> 返回 <code>ok:false</code> 只是因为 <code><%= cf.missing.join('、') %></code> 尚未填写，按 <a href="/online">线上站点页的四步引导</a> 配好后会自动变为真实数据；这一步不影响后台、埋点与统计接口。
+      <% } else if (cf.error) { %>
+      Cloudflare 凭证已配置，但本次拉取失败：<%= cf.error %>。其余接口不受影响。
+      <% } else { %>
+      Cloudflare 凭证已配置，线上数据会实时拉取并按 <code><%= cf.host %></code> 过滤。
+      <% } %>
+    </div>
+  </div>
+
+  <section class="panels" id="endpoints">
+    <div class="panel api-panel">
+      <h2>接口清单</h2>
+      <div class="desc">全部为实时状态 · 标「待配置 / 需鉴权」的条目不是故障</div>
+      <% endpoints.forEach(function(e){ %>
+      <div class="ep-row <%= e.s %>">
+        <span class="ep-method <%= e.m === 'POST' ? 'post' : '' %>"><%= e.m %></span>
+        <div class="ep-main"><code><%= e.p %></code><span><%= e.d %></span></div>
+        <span class="ep-tag"><%= e.t %></span>
+      </div>
+      <% }) %>
+      <div class="legend">
+        <span><i class="dot"></i><b>正常</b> 直接可用</span>
+        <span><b>待配置</b> 可选凭证未填</span>
+        <span><b>需鉴权 / 需参数</b> 按说明调用</span>
+      </div>
+    </div>
+    <div class="panel api-panel">
+      <h2>调用示例</h2>
+      <div class="desc">浏览器看页面，curl / 程序拿 JSON</div>
+      <pre class="curl">curl -s http://localhost:<%= port %>/api/stats
+
+curl -s http://localhost:<%= port %>/api/cloudflare
+
+curl -s "http://localhost:<%= port %>/health?format=json"
+
+curl -s -X POST http://localhost:<%= port %>/api/track \
+  -H "Content-Type: application/json" \
+  -d '{"path":"/","referrer":""}'</pre>
+      <div class="kv" style="margin-top:16px"><span>浏览器访问 /api/*</span><b class="pill">自动显示本页</b></div>
+      <div class="kv"><span>强制 JSON</span><code>?format=json</code></div>
+      <div class="kv"><span>强制页面</span><code>?format=html</code></div>
+      <div class="kv"><span>只接受 POST 的接口</span><b class="pill">GET 返回 405 提示</b></div>
+      <div class="kv"><span>响应缓存</span><code>no-store</code></div>
+      <div class="notice" style="margin:18px 0 0;padding:13px 15px;font-size:12px">
+        <div>JSON 新增了机器可读 <code>status</code> 与说明字段 <code>note</code>：<code>ok</code> / <code>not_configured</code> / <code>error</code> / <code>empty</code>。原有的 <code>ok</code>、<code>configured</code>、<code>missing</code>、<code>error</code> 全部保留，旧调用不受影响。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="api-grid">
+    <% var urls = { stats:'/api/stats?format=json', cloudflare:'/api/cloudflare?format=json', 'cf-status':'/api/cloudflare/status?format=json', health:'/health?format=json' }; %>
+    <% previews.forEach(function(p){ %>
+    <div class="json-card" id="<%= p.id %>">
+      <div class="json-head">
+        <div class="jh-body">
+          <h3><%= p.title %></h3>
+          <div class="jh-name"><%= p.name %></div>
+        </div>
+        <div class="json-tools">
+          <button class="mini-btn copy-json" type="button">复制</button>
+          <a class="mini-btn primary" href="<%= urls[p.id] %>" target="_blank" rel="noopener">原始 JSON</a>
+        </div>
+      </div>
+      <div class="json-hint"><%= p.hint %></div>
+      <pre class="json"><%= p.json %></pre>
+      <div class="legend"><span>状态 <b><%= p.t %></b></span><span>HTTP <b>200</b></span><span>实时响应 · 未使用模拟数据</span></div>
+    </div>
+    <% }) %>
+  </section>
+
+  <div class="notice" style="margin-top:2px">
+    <div>
+      <b>字段速查：</b>
+      <code>ok:false</code> = 该数据源暂无可用数据，不等于接口失败；
+      <code>configured:false</code> + <code>missing</code> = <code>.env</code> 里还缺凭证；
+      <code>error:null</code> = 没有异常，非 null 才是真正的错误；
+      <code>status</code> = 明确的机器可读状态。
+      完整的实时检测结果见 <a href="/health">健康检查</a>。
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function paint(raw) {
+    return esc(raw).replace(
+      /("(?:\\.|[^"\\])*"\s*:)|("(?:\\.|[^"\\])*")|(-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|(\btrue\b|\bfalse\b)|(\bnull\b)/g,
+      function (m, key, str, num, bool, nul) {
+        var cls = key ? 'k' : str ? 's' : num ? 'n' : bool ? 'b' : 'z';
+        return '<span class="' + cls + '">' + m + '</span>';
+      }
+    );
+  }
+  document.querySelectorAll('pre.json').forEach(function (pre) {
+    var raw = pre.textContent;
+    pre.dataset.raw = raw;
+    pre.innerHTML = paint(raw);
+    var btn = pre.closest('.json-card').querySelector('.copy-json');
+    btn.addEventListener('click', function () {
+      function done() {
+        btn.textContent = '已复制';
+        btn.classList.add('done');
+        setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('done'); }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(raw).then(done, function () { fallback(); });
+      } else { fallback(); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = raw; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { /* 忽略 */ }
+        document.body.removeChild(ta);
+      }
+    });
+  });
+
+  var focus = '<%= focus %>';
+  if (focus) {
+    var target = document.getElementById(focus);
+    if (target) {
+      target.style.boxShadow = 'var(--shadow), 0 0 0 2px var(--accent-soft)';
+      setTimeout(function () { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120);
+    }
+  }
+  if (location.hash) {
+    var anchor = document.getElementById(location.hash.slice(1));
+    if (anchor) setTimeout(function () { anchor.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+  }
+})();
+</script>
+<%- include('theme-ui') %>
+</body>
+</html>

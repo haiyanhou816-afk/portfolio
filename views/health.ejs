@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
+<title>健康检查 · Portfolio Admin</title>
+<%- include('theme-boot') %>
+<%- include('admin-style') %>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">
+    <div class="logo-mark">P</div>
+    <div><b>Portfolio Admin</b><small>管理后台 · v1.0</small></div>
+  </div>
+  <div class="nav-label">监测</div>
+  <nav class="nav">
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
+  </nav>
+  <div class="nav-label">系统</div>
+  <nav class="nav">
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+    <a class="on" href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+  </nav>
+  <div class="side-foot">
+    <div class="live"><i></i>服务运行中</div>
+    端口 <%= port %> · <%= storageLabel %>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="top">
+    <div class="crumb">系统 / <b>健康检查</b></div>
+    <div class="top-actions">
+      <div class="badge <%= ok ? '' : 'warn' %>"><i></i><%= ok ? '服务正常' : '存在异常' %></div>
+      <button class="btn ghost" onclick="location.href='/health?format=json'">查看 JSON</button>
+      <button class="btn" onclick="location.reload()">重新检测</button>
+    </div>
+  </header>
+
+  <div class="source-tabs">
+    <a href="/online">线上站点 · Cloudflare</a>
+    <a href="/monitor">入口与安全</a>
+    <a href="/dashboard">本地预览 · 埋点</a>
+    <a href="/health" class="on">健康检查</a>
+    <a href="/api-explorer">API 数据</a>
+    <a href="/setup">数据源配置</a>
+  </div>
+
+  <div class="health-hero <%= ok ? '' : 'bad' %>">
+    <div class="hc-mark">
+      <% if (ok) { %>
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/></svg>
+      <% } else { %>
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M12 8v5M12 16.5h.01"/></svg>
+      <% } %>
+    </div>
+    <div class="hc-body">
+      <div class="eyebrow">System health · /health</div>
+      <h2><%= ok ? '服务运行正常' : '存在异常项' %></h2>
+      <p><%= ok ? '核心服务、存储、埋点与统计接口全部通过。下方带「待配置」「未启动」的条目属于可选项，不影响后台本身运行。' : '有检查项未通过，请查看下方明细。' %></p>
+    </div>
+    <div class="hc-meta">
+      检查时间<br><b class="mono"><%= checkedAt.toLocaleString('zh-CN', { hour12: false }) %></b><br>已运行 <%= uptimeText %>
+    </div>
+  </div>
+
+  <section class="grid">
+    <div class="stat">
+      <div class="label">累计访问 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span></div>
+      <div class="num mono"><%= visits %></div>
+      <div class="sub">来自 /api/track 真实上报</div>
+    </div>
+    <div class="stat">
+      <div class="label">注册用户 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg></span></div>
+      <div class="num mono"><%= users %></div>
+      <div class="sub">/api/register 添加</div>
+    </div>
+    <div class="stat">
+      <div class="label">运行时长 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span></div>
+      <div class="num state mono"><%= uptimeShort %></div>
+      <div class="sub">自本次进程启动</div>
+    </div>
+    <div class="stat">
+      <div class="label">检查结论 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/></svg></span></div>
+      <div class="num state"><%= ok ? '全部通过' : '需处理' %></div>
+      <div class="sub">共 <%= checks.length %> 项检查</div>
+    </div>
+  </section>
+
+  <section class="panels">
+    <div class="panel">
+      <h2>检查项明细</h2>
+      <div class="desc">每次打开页面实时检测，结果不缓存</div>
+      <% checks.forEach(function(c){ %>
+      <div class="health-row <%= c.state %>">
+        <span class="hr-dot"></span>
+        <div class="hr-body"><b><%= c.name %></b><span><%= c.detail %></span></div>
+        <span class="hr-tag"><%= c.tag %></span>
+      </div>
+      <% }) %>
+    </div>
+    <div class="panel">
+      <h2>运行环境</h2>
+      <div class="desc">本机服务信息 · 未包含任何模拟数据</div>
+      <div class="kv"><span>监听地址</span><code>*:<%= port %></code></div>
+      <div class="kv"><span>存储模式</span><b class="pill"><%= mode %></b></div>
+      <div class="kv"><span>持久化位置</span><code><%= dataFile %></code></div>
+      <div class="kv"><span>Node 版本</span><b class="mono"><%= node %></b></div>
+      <div class="kv"><span>运行平台</span><b class="mono"><%= platform %></b></div>
+      <div class="kv"><span>监测目标</span><code><%= cloudflare.host %></code></div>
+      <div class="kv"><span>JSON 接口</span><a href="/health?format=json" style="color:var(--accent);text-decoration:none">/health?format=json</a></div>
+      <div class="kv"><span>探针别名</span><code>/health</code></div>
+    </div>
+  </section>
+
+  <div class="notice">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    <div>
+      <b>「待配置 / 未启动」不是报错。</b>
+      <% if (!cloudflare.configured) { %>
+      JSON 里的 <code>configured:false</code> 与 <code>missing</code> 只表示 Cloudflare 凭证尚未填写（<code><%= cloudflare.missing.join('、') %></code>），本机服务、埋点与统计都已正常。按 <a href="/online">线上站点页的四步引导</a> 填好 <code>.env</code> 后，这一项会自动变为「已配置」。
+      <% } else { %>
+      Cloudflare 凭证已配置，实时数据请到 <a href="/online">线上站点页</a> 查看。
+      <% } %>
+      浏览器打开 <code>/health</code> 显示本页；监控程序、curl 或带 <code>?format=json</code> 的请求仍返回原来的 JSON，接口契约未变。
+    </div>
+  </div>
+</main>
+
+<%- include('theme-ui') %>
+</body>
+</html>

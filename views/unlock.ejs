@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
+<title>访问验证 · Portfolio Admin</title>
+<%- include('theme-boot') %>
+<%- include('admin-style') %>
+<style>
+.unlock-wrap{position:fixed;inset:0;z-index:1;width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:var(--bg)}
+.unlock-card{width:min(420px,100%);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:38px}
+.unlock-card .logo-mark{width:40px;height:40px;font-size:17px;margin-bottom:22px}
+.unlock-card h1{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:0 0 10px;color:var(--ink)}
+.unlock-card p{font-size:13px;line-height:1.75;color:var(--muted);margin:0 0 26px}
+.unlock-card .btn{width:100%;height:42px}
+.unlock-foot{margin-top:22px;padding-top:18px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--faint);line-height:1.7}
+.unlock-foot code{background:var(--fill-3);padding:2px 6px;border-radius:5px;color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="unlock-wrap">
+  <div class="unlock-card">
+    <div class="logo-mark">P</div>
+    <h1>访问验证</h1>
+    <p>这个后台的页面受访问密码保护。输入发布时生成的密码后即可继续浏览，浏览器会记住本次会话。</p>
+    <form id="unlockForm" autocomplete="off">
+      <div class="form-field">
+        <label for="pw">访问密码</label>
+        <input id="pw" type="password" placeholder="输入访问密码" autocomplete="current-password" required>
+      </div>
+      <button class="btn" id="go" type="submit">解锁并继续</button>
+      <div class="form-msg" id="msg" hidden></div>
+    </form>
+    <div class="unlock-foot">用户名固定为 <code>admin</code>；密码只在服务端比对，不会写进页面或 URL。首页与状态页保持公开。</div>
+  </div>
+</div>
+<script>
+var NEXT = <%- JSON.stringify(next) %>;
+var form = document.getElementById('unlockForm');
+var btn = document.getElementById('go');
+var msg = document.getElementById('msg');
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  btn.disabled = true;
+  btn.textContent = '验证中…';
+  msg.hidden = true;
+  try {
+    var r = await fetch('/api/unlock' + location.search, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: document.getElementById('pw').value })
+    });
+    var j = await r.json();
+    if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    location.href = NEXT;
+  } catch (err) {
+    msg.className = 'form-msg bad';
+    msg.textContent = '解锁失败：' + err.message;
+    msg.hidden = false;
+    btn.disabled = false;
+    btn.textContent = '解锁并继续';
+  }
+});
+</script>
+</body>
+</html>

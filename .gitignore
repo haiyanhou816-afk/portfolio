@@ -1,0 +1,16 @@
+# 本地凭据与运行时数据：绝不入库
+.env
+.env.local
+.env.*.local
+data/config.json
+data/store.json
+data/store.json.tmp
+data/*.log
+
+# 依赖与系统文件
+node_modules/
+npm-debug.log*
+*.log
+.DS_Store
+.idea/
+.vscode/

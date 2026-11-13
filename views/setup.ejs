@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
+<title>数据源配置 · Portfolio Admin</title>
+<%- include('theme-boot') %>
+<%- include('admin-style') %>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">
+    <div class="logo-mark">P</div>
+    <div><b>Portfolio Admin</b><small>管理后台 · v1.0</small></div>
+  </div>
+  <div class="nav-label">监测</div>
+  <nav class="nav">
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+  </nav>
+  <div class="nav-label">系统</div>
+  <nav class="nav">
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
+    <a class="on" href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-2.9 1.2v.2h-4v-.2a1.7 1.7 0 00-2.9-1.2l-.1.1-2.8-2.8.1-.1A1.7 1.7 0 003 15H2.8v-4H3a1.7 1.7 0 001.2-2.9l-.1-.1 2.8-2.8.1.1A1.7 1.7 0 0010 4.2V4h4v.2a1.7 1.7 0 002.9 1.2l.1-.1 2.8 2.8-.1.1A1.7 1.7 0 0021 11h.2v4H21a1.7 1.7 0 00-1.6 0z"/></svg>数据源配置</a>
+  </nav>
+  <div class="side-foot">
+    <div class="live"><i></i>服务运行中</div>
+    端口 <%= port %> · 在线配置
+  </div>
+</aside>
+
+<main class="main">
+  <header class="top">
+    <div class="crumb">系统 / <b>数据源配置</b></div>
+    <div class="top-actions">
+      <div class="badge <%= status.configured ? '' : 'warn' %>"><i></i><%= status.configured ? '凭证齐备' : '等待配置' %></div>
+      <button class="btn ghost" onclick="location.href='/online'">查看引导</button>
+      <button class="btn" onclick="location.href='/online?refresh=1'">刷新数据</button>
+    </div>
+  </header>
+
+  <div class="source-tabs">
+    <a href="/online">线上站点 · Cloudflare</a>
+    <a href="/monitor">入口与安全</a>
+    <a href="/dashboard">本地预览 · 埋点</a>
+    <a href="/health">健康检查</a>
+    <a href="/api-explorer">API 数据</a>
+    <a class="on" href="/setup">数据源配置</a>
+  </div>
+
+  <div class="notice">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    <div><b>在这里直接填写 Cloudflare 凭证，线上站点即刻接通真实数据。</b> 凭证只保存在服务器侧的 <code>data/config.json</code>，页面从不回显 token 明文；未配齐时线上监测页不会显示任何模拟数字。详细获取步骤见 <a href="/online" style="color:var(--accent);text-decoration:none">线上站点的四步引导</a>。</div>
+  </div>
+
+  <div class="setup">
+    <div class="setup-main">
+      <section class="panel">
+        <h2>Cloudflare Web Analytics</h2>
+        <div class="desc">监测目标 <code><%= status.host %></code> · 保存后自动发起一次真实连接测试</div>
+
+        <form id="configForm" autocomplete="off" style="margin-top:22px">
+          <div class="form-field">
+            <label for="CF_API_TOKEN">API Token · Account / Account Analytics / Read</label>
+            <input id="CF_API_TOKEN" name="CF_API_TOKEN" type="password" placeholder="<%= keys.CF_API_TOKEN ? '已保存，留空表示不修改' : '粘贴 API Token' %>" autocomplete="new-password">
+          </div>
+          <div class="form-field">
+            <label for="CF_ACCOUNT_ID">Account ID · 32 位十六进制</label>
+            <input id="CF_ACCOUNT_ID" name="CF_ACCOUNT_ID" type="text" placeholder="<%= keys.CF_ACCOUNT_ID ? '已保存，留空表示不修改' : '粘贴 Account ID' %>" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="CF_SITE_TAG">Site Tag · Web Analytics 的 site_tag（非 beacon token）</label>
+            <input id="CF_SITE_TAG" name="CF_SITE_TAG" type="text" placeholder="<%= keys.CF_SITE_TAG ? '已保存，留空表示不修改' : '粘贴 Site Tag' %>" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="CF_HOST">监测主机名 · 用于过滤 requestHost</label>
+            <input id="CF_HOST" name="CF_HOST" type="text" value="<%= status.host %>" autocomplete="off">
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
+            <button class="btn" type="submit" id="saveBtn">保存并测试连接</button>
+            <button class="btn ghost" type="button" id="clearBtn">清除在线配置</button>
+          </div>
+          <div class="form-msg" id="configMsg" hidden></div>
+        </form>
+      </section>
+
+      <section class="panel" style="margin-top:20px">
+        <h2>说明</h2>
+        <div class="kv"><span>数据来自</span><b>Cloudflare GraphQL Analytics API</b></div>
+        <div class="kv"><span>统计口径</span><b>浏览器 beacon · 真实 PV / 会话</b></div>
+        <div class="kv"><span>本地是否缓存数据</span><b>仅缓存 60 秒查询结果</b></div>
+        <div class="kv"><span>未配置时</span><b>显示引导，不显示任何数字</b></div>
+        <div class="kv"><span>当前配置来源</span><b><%= keys.source === 'online' ? '在线配置页' : '环境变量 / .env' %></b></div>
+      </section>
+    </div>
+
+    <aside class="setup-side">
+      <div class="check-card">
+        <div class="eyebrow">连接状态</div>
+        <div class="status-line <%= status.configured ? 'done' : '' %>"><i></i><%= status.configured ? '凭证齐备' : '等待配置' %></div>
+        <div class="checklist">
+          <div class="check <%= keys.CF_API_TOKEN ? 'done' : '' %>"><span class="dot"></span><code>CF_API_TOKEN</code><small><%= keys.CF_API_TOKEN ? '已配置' : '待填写' %></small></div>
+          <div class="check <%= keys.CF_ACCOUNT_ID ? 'done' : '' %>"><span class="dot"></span><code>CF_ACCOUNT_ID</code><small><%= keys.CF_ACCOUNT_ID ? '已配置' : '待填写' %></small></div>
+          <div class="check <%= keys.CF_SITE_TAG ? 'done' : '' %>"><span class="dot"></span><code>CF_SITE_TAG</code><small><%= keys.CF_SITE_TAG ? '已配置' : '待填写' %></small></div>
+        </div>
+        <div class="card-note">三项齐备后由 Cloudflare 侧采集数据，本后台只读取，不生成也不补全任何数值。</div>
+      </div>
+      <div class="check-card">
+        <div class="eyebrow">访问与存储</div>
+        <div class="kv"><span>当前域名</span><b id="hostLine">—</b></div>
+        <div class="kv"><span>公网访问保护</span><b><%= passwordProtected ? '已开启' : '未开启' %></b></div>
+        <div class="kv"><span>访问记录</span><b>独立实例 · 本地 JSON</b></div>
+        <p style="font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:12px">线上实例与本机后台的数据互不相通；作品集埋点数据仍留在本机。</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+document.getElementById('hostLine').textContent = location.host;
+var form = document.getElementById('configForm');
+var msg = document.getElementById('configMsg');
+var saveBtn = document.getElementById('saveBtn');
+function show(cls, text) {
+  msg.className = 'form-msg ' + cls;
+  msg.textContent = text;
+  msg.hidden = false;
+}
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  saveBtn.disabled = true;
+  saveBtn.textContent = '保存并测试连接…';
+  show('ok', '正在保存凭证并连接 Cloudflare…');
+  try {
+    var body = {};
+    ['CF_API_TOKEN', 'CF_ACCOUNT_ID', 'CF_SITE_TAG', 'CF_HOST'].forEach(function (k) {
+      var v = form.elements[k].value.trim();
+      if (v) body[k] = v;
+    });
+    var r = await fetch('/api/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    var j = await r.json();
+    if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    if (j.probe.ok) {
+      show('ok', '已连接 Cloudflare，近 30 天真实浏览量 ' + j.probe.total + ' 次。正在刷新页面…');
+    } else if (j.status.configured) {
+      show('bad', '凭证已保存，但本次拉取失败：' + (j.probe.error || j.probe.note || '未知原因'));
+    } else {
+      show('ok', '已保存。仍缺少 ' + j.status.missing.join('、') + '，配齐后才会显示真实数据。正在刷新…');
+    }
+    if (j.probe.ok || !j.status.configured) setTimeout(function () { location.reload(); }, 1600);
+  } catch (err) {
+    show('bad', '保存失败：' + err.message);
+  }
+  saveBtn.disabled = false;
+  saveBtn.textContent = '保存并测试连接';
+});
+document.getElementById('clearBtn').addEventListener('click', async function () {
+  if (!window.confirm('确定清除已保存的 Cloudflare 凭证？')) return;
+  try {
+    var r = await fetch('/api/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clear' })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    show('ok', '已清除在线配置，正在刷新…');
+    setTimeout(function () { location.reload(); }, 900);
+  } catch (err) {
+    show('bad', '清除失败：' + err.message);
+  }
+});
+</script>
+<%- include('theme-ui') %>
+</body>
+</html>
