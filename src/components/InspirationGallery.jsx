@@ -225,7 +225,10 @@ export default function InspirationGallery({ onBack }) {
             <span className="text-sm font-medium">返回</span>
           </button>
           <h1 className="text-lg font-bold tracking-tight">灵感宝库</h1>
-          <p className="text-xs text-[var(--text-dim)] hidden sm:block">🖼️ 拖拽任意位置 · Ctrl+V 粘贴 · 点击上传</p>
+          <p className="text-xs text-[var(--text-dim)] hidden sm:flex items-center justify-end gap-1.5">
+            <ImageIcon size={13} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+            <span>拖拽任意位置 · Ctrl+V 粘贴 · 点击上传</span>
+          </p>
         </div>
       </header>
 
