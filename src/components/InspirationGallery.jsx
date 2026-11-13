@@ -230,7 +230,7 @@ export default function InspirationGallery({ onBack }) {
           flakeSize={1}
           pixelSize={5}
           glow={0.3}
-          mouseInteraction
+          mouseInteraction={false}
           sway={0.3}
           brightness={0.85}
           fade={0.55}
