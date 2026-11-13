@@ -27,6 +27,9 @@ uniform float uMinFlakeSize; uniform float uPixelResolution; uniform float uSpee
 uniform float uDepthFade; uniform float uFarPlane; uniform vec3 uColor;
 uniform float uBrightness; uniform float uGamma; uniform float uDensity;
 uniform float uVariant; uniform float uDirection;
+uniform float uPixelSize; uniform float uWind; uniform float uSway;
+uniform float uGlow; uniform float uFade; uniform vec2 uMouse;
+uniform float uMouseInfluence;
 #define PI 3.14159265
 #define PI_OVER_6 0.5235988
 #define PI_OVER_3 1.0471976
@@ -61,7 +64,10 @@ float snowflakeDist(vec2 p) {
 
 void main() {
   float invPixelRes = 1.0 / uPixelResolution;
-  float pixelSize = max(1.0, floor(0.5 + uResolution.x * invPixelRes));
+  /* uPixelSize > 0 时按“像素块边长”量化，否则沿用 uPixelResolution 的旧算法 */
+  float pixelSize = uPixelSize > 0.5
+    ? max(1.0, floor(uPixelSize))
+    : max(1.0, floor(0.5 + uResolution.x * invPixelRes));
   float invPixelSize = 1.0 / pixelSize;
   vec2 fragCoord = floor(gl_FragCoord.xy * invPixelSize);
   vec2 res = uResolution * invPixelSize;
@@ -73,6 +79,11 @@ void main() {
   float windX = cos(uDirection) * 0.4;
   float windY = sin(uDirection) * 0.4;
   vec3 camPos = (windX * camI + windY * camJ + 0.1 * camK) * timeSpeed;
+  /* 横向风：随时间持续平移 */
+  camPos += uWind * timeSpeed * camJ;
+  /* 鼠标视差：整体沿鼠标方向轻微偏移 */
+  vec2 mouseOffset = (uMouse - vec2(0.5)) * uMouseInfluence;
+  camPos += camI * (mouseOffset.x * 0.55) + camJ * mouseOffset.y;
   vec3 pos = camPos;
   vec3 absRay = max(abs(ray), vec3(0.001));
   vec3 strides = 1.0 / absRay;
@@ -104,6 +115,8 @@ void main() {
         vec3 testPos = pos + ray * toIntersection - flakePos;
         float testX = dot(testPos, camI);
         float testY = dot(testPos, camJ);
+        /* 随风轻摆：按位置与时间做横向正弦偏移 */
+        testX += uSway * 0.06 * sin(uTime * 0.9 + flakePos.y * 4.5 + flakePos.z * 2.3);
         vec2 testUV = abs(vec2(testX, testY));
         float depth = dot(flakePos - camPos, camK);
         float calculatedFlakeSize = max(uFlakeSize, uMinFlakeSize * depth * halfInvResX);
@@ -112,10 +125,19 @@ void main() {
         else if (uVariant < 1.5) dist = length(testUV);
         else dist = snowflakeDist(vec2(testX, testY) / calculatedFlakeSize) * calculatedFlakeSize;
 
-        if (dist < calculatedFlakeSize) {
+        /* uGlow 给雪花加一圈柔光，避免只有硬边方块 */
+        float glowRadius = calculatedFlakeSize * (1.0 + uGlow * 3.5);
+        float hitRadius = max(calculatedFlakeSize, glowRadius);
+
+        if (dist < hitRadius) {
+          float core = 1.0 - smoothstep(calculatedFlakeSize * 0.55, calculatedFlakeSize, dist);
+          float halo = 1.0 - clamp(
+            (dist - calculatedFlakeSize) / max(glowRadius - calculatedFlakeSize, 1e-4), 0.0, 1.0);
+          halo = halo * halo * uGlow;
+          float shape = clamp(max(core, halo), 0.0, 1.0);
           float flakeSizeRatio = uFlakeSize / calculatedFlakeSize;
           float intensity = exp2(-(t + toIntersection) * invDepthFade) *
-            min(1.0, flakeSizeRatio * flakeSizeRatio) * uBrightness;
+            min(1.0, flakeSizeRatio * flakeSizeRatio) * uBrightness * uFade * shape;
           fragColor = vec4(uColor * pow(vec3(intensity), vec3(uGamma)), 1.0);
           return;
         }
@@ -145,6 +167,14 @@ export default function PixelSnow({
   density = 0.3,
   variant = "square",
   direction = 125,
+  /* 以下为像素块风格参数：pixelSize 为像素块边长(px)，
+     flakeSize 单位为“块”（1 = 一块大小），配合 pixelSize 使用 */
+  pixelSize = 0,
+  wind = 0,
+  sway = 0,
+  glow = 0,
+  fade = 1,
+  mouseInteraction = false,
   className = "",
   style = {},
 }) {
@@ -154,6 +184,12 @@ export default function PixelSnow({
   const materialRef = useRef(null);
   const visibleRef = useRef(true);
   const resizeTimeoutRef = useRef(null);
+
+  /* 指定 pixelSize 时，瓦片尺寸按“块”换算成世界单位：
+     1 块 ≈ pixelSize 像素；10 是标定系数，让近处雪花约 4 倍块宽 */
+  const flakeSizeRef = useRef(() => 0.01);
+  flakeSizeRef.current = (width) =>
+    pixelSize > 0 ? (flakeSize * pixelSize * 10) / Math.max(width, 1) : flakeSize;
 
   const variantValue = useMemo(
     () => (variant === "round" ? 1 : variant === "snowflake" ? 2 : 0),
@@ -175,6 +211,7 @@ export default function PixelSnow({
       const height = container.offsetHeight;
       renderer.setSize(width, height);
       material.uniforms.uResolution.value.set(width, height);
+      material.uniforms.uFlakeSize.value = flakeSizeRef.current(width);
     }, 100);
   }, []);
 
@@ -216,7 +253,7 @@ export default function PixelSnow({
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: new Vector2(container.offsetWidth, container.offsetHeight) },
-        uFlakeSize: { value: flakeSize },
+        uFlakeSize: { value: flakeSizeRef.current(container.offsetWidth) },
         uMinFlakeSize: { value: minFlakeSize },
         uPixelResolution: { value: pixelResolution },
         uSpeed: { value: speed },
@@ -228,6 +265,13 @@ export default function PixelSnow({
         uDensity: { value: density },
         uVariant: { value: variantValue },
         uDirection: { value: (direction * Math.PI) / 180 },
+        uPixelSize: { value: pixelSize },
+        uWind: { value: wind },
+        uSway: { value: sway },
+        uGlow: { value: glow },
+        uFade: { value: fade },
+        uMouse: { value: new Vector2(0.5, 0.5) },
+        uMouseInfluence: { value: mouseInteraction ? 0.35 : 0 },
       },
     });
     materialRef.current = material;
@@ -238,7 +282,7 @@ export default function PixelSnow({
     const startedAt = performance.now();
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
-      if (!visibleRef.current) return;
+      if (!visibleRef.current || document.hidden) return;
       material.uniforms.uTime.value = (performance.now() - startedAt) * 0.001;
       renderer.render(scene, camera);
     };
@@ -261,7 +305,7 @@ export default function PixelSnow({
   useEffect(() => {
     const material = materialRef.current;
     if (!material) return;
-    material.uniforms.uFlakeSize.value = flakeSize;
+    material.uniforms.uFlakeSize.value = flakeSizeRef.current(containerRef.current?.offsetWidth || 1);
     material.uniforms.uMinFlakeSize.value = minFlakeSize;
     material.uniforms.uPixelResolution.value = pixelResolution;
     material.uniforms.uSpeed.value = speed;
@@ -273,7 +317,28 @@ export default function PixelSnow({
     material.uniforms.uVariant.value = variantValue;
     material.uniforms.uDirection.value = (direction * Math.PI) / 180;
     material.uniforms.uColor.value.copy(colorVector);
-  }, [flakeSize, minFlakeSize, pixelResolution, speed, depthFade, farPlane, brightness, gamma, density, variantValue, direction, colorVector]);
+    material.uniforms.uPixelSize.value = pixelSize;
+    material.uniforms.uWind.value = wind;
+    material.uniforms.uSway.value = sway;
+    material.uniforms.uGlow.value = glow;
+    material.uniforms.uFade.value = fade;
+    material.uniforms.uMouseInfluence.value = mouseInteraction ? 0.35 : 0;
+  }, [flakeSize, minFlakeSize, pixelResolution, speed, depthFade, farPlane, brightness, gamma, density, variantValue, direction, colorVector, pixelSize, wind, sway, glow, fade, mouseInteraction]);
+
+  /* 鼠标视差：跟随指针位置轻微偏移整片雪 */
+  useEffect(() => {
+    if (!mouseInteraction) return undefined;
+    const handleMove = (event) => {
+      const material = materialRef.current;
+      if (!material) return;
+      material.uniforms.uMouse.value.set(
+        event.clientX / Math.max(window.innerWidth, 1),
+        event.clientY / Math.max(window.innerHeight, 1)
+      );
+    };
+    window.addEventListener("pointermove", handleMove, { passive: true });
+    return () => window.removeEventListener("pointermove", handleMove);
+  }, [mouseInteraction]);
 
   return <div ref={containerRef} className={`pixel-snow-container ${className}`} style={style} />;
 }

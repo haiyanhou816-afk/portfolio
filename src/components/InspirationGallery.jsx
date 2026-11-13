@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Upload, Image as ImageIcon, X, ArrowLeft, Sparkles, Tag, Clock } from 'lucide-react';
 import HoldButton from './HoldButton';
+import PixelSnow from './PixelSnow';
 
 // ========== IndexedDB 工具 ==========
 const DB_NAME = 'InspirationGalleryDB';
@@ -218,6 +219,23 @@ export default function InspirationGallery({ onBack }) {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-main)]">
+      {/* 像素雪背景 */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <PixelSnow
+          color="#ffffff"
+          variant="snowflake"
+          density={0.05}
+          speed={1}
+          wind={0.25}
+          flakeSize={1}
+          pixelSize={5}
+          glow={0.3}
+          mouseInteraction
+          sway={0.3}
+          brightness={0.85}
+          fade={0.55}
+        />
+      </div>
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-base)]/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-[1700px] mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
@@ -264,7 +282,7 @@ export default function InspirationGallery({ onBack }) {
         )}
       </AnimatePresence>
 
-      <main className="pt-24 pb-16" ref={galRef}>
+      <main className="relative z-10 pt-24 pb-16" ref={galRef}>
         <div className="max-w-[1700px] mx-auto px-6 md:px-12 mb-8">
           {/* 搜索 */}
           <div className="flex gap-3 mb-8">
