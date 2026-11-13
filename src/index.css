@@ -1157,7 +1157,9 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
   pointer-events: none;
 }
 
-.featured-grid-section__copy span,
+/* 只作用于「02 / 精选项目」这个直接子级标签。
+   用后代选择器会连标题里的两行 span 一起压成 10px 等宽字。 */
+.featured-grid-section__copy > span,
 .featured-grid-section__status {
   color: var(--section-visual-muted);
   font-family: var(--font-mono);
@@ -1167,7 +1169,9 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 
 .featured-grid-section__copy h2 {
   margin: 1.1rem 0 1.35rem;
-  /* 与站点其他区块标题同级：text-4xl / md:text-5xl / lg:text-6xl */
+  /* 与站点其他区块标题同字体、同级：text-4xl / md:text-5xl / lg:text-6xl */
+  font-family: var(--font-sans);
+  color: var(--section-visual-text);
   font-size: clamp(2.25rem, 5vw, 3.75rem);
   font-weight: 700;
   line-height: 1.05;
@@ -1182,6 +1186,12 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 
 .featured-grid-section__title-line {
   display: block;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
 }
 
 .featured-grid-section__copy p {
