@@ -28,6 +28,13 @@
 
     <link rel="canonical" href="https://haiyanhou816-afk.github.io/portfolio/" />
 
+    <!-- 版本迭代监测：每次发布把这个版本号 +1（也可由 CI 注入 git 短 hash） -->
+    <meta name="app-version" content="v2026.11.14" />
+    <!-- 入口监测上报端点：本地预览自动走 localhost:4000，线上走这个后台 -->
+    <meta name="track-endpoint" content="https://portfolio-admin-15620.app.workbuddy.host/api/track" />
+    <!-- 若发布平台要求分享码，把 sharecode 填这里，上报 URL 会自动带上 -->
+    <meta name="track-sharecode" content="OREZLXLSU5" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -35,30 +42,50 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- 访问埋点：仅本地预览生效，上报到 localhost:4000 的管理后台 -->
+    <!-- 访问埋点：本地预览与线上站点统一上报到管理后台 /api/track
+         记录来源 referrer、UTM、落地页、版本与 UA；sendBeacon 用 text/plain，不触发预检、不阻塞页面 -->
     <script>
       (function () {
-        var host = location.hostname;
-        if (host !== 'localhost' && host !== '127.0.0.1') return;
-        var endpoint = 'http://' + host + ':4000/api/track';
-        var payload = JSON.stringify({
-          path: location.pathname + location.search + location.hash,
-          referrer: document.referrer || '',
-          userAgent: navigator.userAgent,
-          source: 'portfolio-local'
-        });
-        function report() {
-          fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true,
-            mode: 'cors',
-            credentials: 'omit'
-          }).catch(function () {});
-        }
-        if (document.readyState === 'complete') report();
-        else window.addEventListener('load', report, { once: true });
+        try {
+          var host = location.hostname;
+          var local = (host === 'localhost' || host === '127.0.0.1');
+          var meta = function (name) {
+            var el = document.querySelector('meta[name="' + name + '"]');
+            return el ? (el.getAttribute('content') || '').trim() : '';
+          };
+          var endpoint = window.PORTFOLIO_TRACK_ENDPOINT || (local ? 'http://' + host + ':4000/api/track' : meta('track-endpoint'));
+          if (!endpoint) return;
+          var sharecode = window.PORTFOLIO_TRACK_SHARECODE || meta('track-sharecode');
+          if (sharecode) endpoint += (endpoint.indexOf('?') >= 0 ? '&' : '?') + 'sharecode=' + encodeURIComponent(sharecode);
+          var q = new URLSearchParams(location.search);
+          var payload = JSON.stringify({
+            path: location.pathname + location.search + location.hash,
+            url: location.href,
+            landing: location.pathname,
+            referrer: document.referrer || '',
+            userAgent: navigator.userAgent,
+            source: local ? 'portfolio-local' : 'portfolio-online',
+            version: meta('app-version'),
+            utm_source: q.get('utm_source') || '',
+            utm_medium: q.get('utm_medium') || '',
+            utm_campaign: q.get('utm_campaign') || '',
+            utm_term: q.get('utm_term') || ''
+          });
+          function report() {
+            try {
+              if (navigator.sendBeacon) {
+                navigator.sendBeacon(endpoint, new Blob([payload], { type: 'text/plain' }));
+              } else {
+                fetch(endpoint, {
+                  method: 'POST', headers: { 'Content-Type': 'text/plain' },
+                  body: payload, keepalive: true, mode: 'cors', credentials: 'omit'
+                }).catch(function () {});
+              }
+            } catch (e) {}
+          }
+          if (document.readyState === 'complete') report();
+          else window.addEventListener('load', report, { once: true });
+        } catch (e) {}
       })();
     </script>
     <!-- Cloudflare Web Analytics -->
