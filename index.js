@@ -35,6 +35,14 @@ function readEnv(key) {
   } catch (err) { /* .env 不存在时忽略 */ }
   return '';
 }
+/* 埋点站内基准：与 Cloudflare 的 CF_HOST 完全解耦。
+   CF_HOST 只决定 /online 从 Cloudflare 拉哪个 host 的数据；
+   这里决定哪些 referrer 算「站内跳转」，两者可以指向不同域名。
+   TRACK_SITE_HOSTS 支持逗号分隔多个域名；未配置时回退到 CF_HOST，保持旧行为。 */
+function trackSiteHosts() {
+  const raw = String(process.env.TRACK_SITE_HOSTS || readEnv('TRACK_SITE_HOSTS') || '').trim();
+  return monitor.siteHostList(raw || cloudflare.config().host);
+}
 /* 源码不内置任何固定凭据：未配置 .env / 环境变量时，每次启动生成临时随机值，
    并在启动日志打印本次访问密码，避免把线上后台密码写进公开仓库。 */
 const EPHEMERAL_SECRET = crypto.randomBytes(24).toString('hex');
@@ -329,7 +337,7 @@ async function buildDashboardData() {
 function buildMonitor() {
   return monitor.summarize({
     visits: store.visits, requests: store.requests, releases: store.releases,
-    siteHost: cloudflare.config().host
+    siteHost: trackSiteHosts()
   });
 }
 /* Cloudflare 的 refererHost 按同一套渠道字典归类，供 /online 展示 */
@@ -338,7 +346,7 @@ function classifyReferrers(stats) {
   return (stats.referrers || []).map(r => {
     const name = r.host || '';
     const ref = name && name !== '直接访问' ? 'https://' + name + '/' : '';
-    const s = monitor.parseSource({ referrer: ref, url: 'https://' + host + '/', siteHost: host });
+    const s = monitor.parseSource({ referrer: ref, url: 'https://' + host + '/', siteHost: trackSiteHosts() });
     return {
       host: name || '直接访问', count: r.count,
       channel: s.channelLabel, tone: monitor.CHANNELS[s.channel].tone,
@@ -557,7 +565,7 @@ app.get('/monitor', (req, res) => {
       data: buildMonitor(), rules: monitor.RULE_CARDS, kinds: monitor.KINDS,
       endpoint: (host ? proto + '://' + host : '') + '/api/track' + suffix,
       edgeEndpoint: (host ? proto + '://' + host : '') + '/api/edge-log' + suffix,
-      siteHost: cloudflare.config().host, port: PORT
+      siteHost: trackSiteHosts().join('、'), cfHost: cloudflare.config().host, port: PORT
     });
   } catch (err) {
     console.error('[monitor]', err);
@@ -598,7 +606,7 @@ app.post('/api/edge-log', (req, res) => {
     const p = monitor.clip(e.path || '/', 200);
     const ua = monitor.clip(e.userAgent || '', 300);
     const c = monitor.classify({ path: p, url: e.url || p, userAgent: ua, method: e.method || 'GET' });
-    const src = monitor.parseSource({ referrer: e.referrer || '', url: e.url || '', siteHost: e.host || cloudflare.config().host, landing: p });
+    const src = monitor.parseSource({ referrer: e.referrer || '', url: e.url || '', siteHost: trackSiteHosts().concat(monitor.siteHostList(e.host)), landing: p });
     store.visits.push({
       ip: monitor.clip(e.ip || clientIp(req), 60), timestamp: e.timestamp ? new Date(e.timestamp) : new Date(),
       path: p, url: monitor.clip(e.url || '', 300), method: monitor.clip(e.method || 'GET', 10),
@@ -762,12 +770,14 @@ app.post('/api/track', async (req, res) => {
   if (rateLimited(ip, 120)) {
     return res.status(429).json({ ok: false, error: '上报过于频繁，本次已丢弃' });
   }
-  const siteHost = cloudflare.config().host;
   const ua = clip(b.userAgent || req.headers['user-agent'], 300);
   const p = clip(b.path || '/', 200);
   const url = clip(b.url || '', 300);
   const ref = clip(b.referrer, 300);
   const version = clip(b.version || '', 40);
+  /* 站内基准 = 配置的站点域名 + 本次上报页面自身的 host：
+     新部署域名无需改配置，也能把站内跳转和外部链接分开。 */
+  const siteHost = trackSiteHosts().concat(monitor.siteHostList(monitor.hostOf(url)));
   const c = monitor.classify({ path: p, url, userAgent: ua, method: 'GET' });
   const src = monitor.parseSource({
     referrer: ref, url, siteHost, landing: b.landing || p,

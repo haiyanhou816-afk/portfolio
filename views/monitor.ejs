@@ -199,6 +199,11 @@
     <div><b>这里全部是真实数据，没有任何模拟访问。</b> 数据来自两处：作品集前端 beacon 上报（含来源与版本），以及打到本服务的每一个 HTTP 请求（含被访问密码挡下的扫描）。静态站点上不执行 JS 的爬虫，需按页面底部说明接入 Cloudflare Worker 才能进明细。明细含 IP，本页受访问密码保护。</div>
   </div>
 
+  <div class="m-note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>
+    <div><b>监测对象</b> · 本页埋点把 <code><%= siteHost %></code> 视为站内，来自这些域名的跳转不会算成外部链接；<a href="/online" style="color:var(--accent);text-decoration:none">/online</a> 的 Cloudflare 数字则单独按 <code><%= cfHost %></code> 过滤。两条链路各看各的域名，互不影响。</div>
+  </div>
+
   <section class="grid m-kpi">
     <div class="stat">
       <div class="label">入口请求总数</div>

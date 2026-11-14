@@ -89,15 +89,35 @@ function hostOf(url) {
 function clip(v, n) { return String(v == null ? '' : v).slice(0, n); }
 
 /**
+ * 站内基准域名：作品集可能同时部署在多个域名（GitHub Pages / Cloudflare Pages）。
+ * 支持数组、逗号/分号/空格分隔的字符串，或带协议与端口的写法，统一规范化。
+ * 与 Cloudflare 的 CF_HOST 完全解耦：CF_HOST 只用于 /online 过滤 requestHost。
+ */
+function siteHostList(v) {
+  const arr = Array.isArray(v) ? v : String(v == null ? '' : v).split(/[,;\s]+/);
+  return arr.map(s => String(s || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '').split('/')[0].split(':')[0]
+    .replace(/^www\./, '')).filter(Boolean);
+}
+/** 某个 referrer 主机名是否属于本站（含子域与本地预览） */
+function isInternalHost(refHost, hosts) {
+  const h = String(refHost || '').toLowerCase().replace(/^www\./, '');
+  if (!h) return false;
+  if (h === 'localhost' || h === '127.0.0.1') return true;
+  return siteHostList(hosts).some(s => h === s || h.endsWith('.' + s));
+}
+
+/**
  * 解析一次访问的来源渠道。
  * @param {object} o { referrer, url, utm:{source,medium,campaign,term}, siteHost, landing }
+ *                     siteHost 可传单个主机名、逗号分隔的多个主机名，或数组。
  */
 function parseSource(o) {
   o = o || {};
   const referrer = clip(o.referrer, 500);
   const url = clip(o.url, 500);
   const utm = o.utm && typeof o.utm === 'object' ? o.utm : {};
-  const siteHost = String(o.siteHost || '').replace(/^www\./, '');
+  const siteHosts = siteHostList(o.siteHost);
   let q = {};
   try { q = Object.fromEntries(new URL(url || 'http://local/').searchParams.entries()); } catch (err) { q = {}; }
   const pick = (a, b) => clip(a || b || '', 80);
@@ -113,8 +133,7 @@ function parseSource(o) {
   if (adClick) {
     channel = 'paid';
     label = source || (q.gclid ? 'Google Ads' : (q.fbclid ? 'Meta Ads' : '广告投放'));
-  } else if (refHost && (refHost === siteHost || refHost.endsWith('.' + siteHost) ||
-             refHost === 'localhost' || refHost === '127.0.0.1')) {
+  } else if (refHost && isInternalHost(refHost, siteHosts)) {
     channel = 'internal'; label = refHost === 'localhost' || refHost === '127.0.0.1' ? '本地预览 / 站内跳转' : '站内跳转';
   } else if (refHost) {
     const eng = ENGINES.find(([re]) => re.test(refHost));
@@ -209,6 +228,12 @@ function enrich(doc, origin, siteHost) {
     term: d.term || '', landing: d.landing || d.path || '/',
     utmPresent: !!d.utmPresent
   } : parseSource({ referrer: d.referrer, url: d.url, utm: d.utm, siteHost, landing: d.landing || d.path });
+  /* 历史记录校正：早期把本站另一个域名误记为「外部链接」的记录，按当前站内基准重新归类。
+     只影响聚合展示，不改写存储里的原始日志。 */
+  if (src.channel === 'referral' && isInternalHost(src.sourceHost, siteHost)) {
+    src.channel = 'internal';
+    src.sourceLabel = '站内跳转';
+  }
   const meta = KINDS[info.kind];
   const time = new Date(d.timestamp || d.time || 0);
   return {
@@ -355,5 +380,6 @@ const RULE_CARDS = [
 
 module.exports = {
   KINDS, CHANNELS, RULE_CARDS,
-  classify, parseSource, enrich, summarize, publicOverview, hostOf, clip
+  classify, parseSource, enrich, summarize, publicOverview,
+  hostOf, clip, siteHostList, isInternalHost
 };
