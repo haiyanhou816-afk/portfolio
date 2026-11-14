@@ -603,6 +603,21 @@ app.post('/api/releases', (req, res) => {
     res.status(201).json({ ok: true, release: doc, total: store.releases.length });
   } catch (err) { res.status(400).json({ ok: false, error: err.message }); }
 });
+/* 数据备份：发布平台重新发布时会用本地 data/store.json 覆盖线上运行时数据。
+   发布前先 GET 此接口、把返回体写回项目里的 data/store.json，再发布就不会丢访客记录。
+   返回结构与 loadFile() 完全一致，可直接当 store.json 用；接口受访问密码保护（含 IP，不公开）。 */
+app.get('/api/store/export', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12);
+  res.setHeader('Content-Disposition', 'attachment; filename="monitor-store-' + stamp + '.json"');
+  res.setHeader('X-Exported-At', new Date().toISOString());
+  res.json({
+    visits: store.visits,
+    users: store.users,
+    requests: store.requests,
+    releases: store.releases
+  });
+});
 /* Cloudflare Worker / 边缘函数转发的原始请求日志：让静态站点上不执行 JS 的爬虫也能被抓到 */
 app.post('/api/edge-log', (req, res) => {
   const b = ingestBody(req);
