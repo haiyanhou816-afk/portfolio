@@ -145,7 +145,7 @@ function parseSource(o) {
     else { channel = 'referral'; label = refHost; }
   } else if (source) {
     if (/google|bing|baidu|sogou|360|搜索/i.test(source)) { channel = 'search'; label = source; }
-    else if (/weibo|wechat|weixin|zhihu|xhs|douyin|bilibili|github|linkedin|twitter|facebook|social/i.test(source)) { channel = 'social'; label = source; }
+    else if (/weibo|wechat|weixin|zhihu|xhs|xiaohongshu|redbook|小红书|douyin|bilibili|github|linkedin|twitter|facebook|social/i.test(source)) { channel = 'social'; label = source; }
     else if (/chatgpt|claude|perplexity|gemini|ai|kimi|doubao/i.test(source)) { channel = 'ai'; label = source; }
     else { channel = 'referral'; label = source; }
   } else {
