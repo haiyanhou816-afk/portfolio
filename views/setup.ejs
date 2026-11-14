@@ -80,6 +80,11 @@
             <label for="CF_HOST">监测主机名 · 用于过滤 requestHost</label>
             <input id="CF_HOST" name="CF_HOST" type="text" value="<%= status.host %>" autocomplete="off">
           </div>
+          <div class="form-field">
+            <label for="PORTFOLIO_URL">作品集站点地址 · 后台「打开线上站点」按钮跳转到这里（需含子路径）</label>
+            <input id="PORTFOLIO_URL" name="PORTFOLIO_URL" type="text" value="<%= status.portfolioUrl %>" autocomplete="off">
+            <div class="hint" style="margin-top:6px">与监测主机名分开配置：主机名只用于 Cloudflare 过滤，站点地址必须是浏览器能直接打开的完整 URL。</div>
+          </div>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
             <button class="btn" type="submit" id="saveBtn">保存并测试连接</button>
@@ -138,7 +143,7 @@ form.addEventListener('submit', async function (e) {
   show('ok', '正在保存凭证并连接 Cloudflare…');
   try {
     var body = {};
-    ['CF_API_TOKEN', 'CF_ACCOUNT_ID', 'CF_SITE_TAG', 'CF_HOST'].forEach(function (k) {
+    ['CF_API_TOKEN', 'CF_ACCOUNT_ID', 'CF_SITE_TAG', 'CF_HOST', 'PORTFOLIO_URL'].forEach(function (k) {
       var v = form.elements[k].value.trim();
       if (v) body[k] = v;
     });

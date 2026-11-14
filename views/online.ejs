@@ -110,7 +110,7 @@
         <div class="guide-head">
           <div class="eyebrow">Setup · 4 steps</div>
           <h2>接通 Cloudflare 真实数据</h2>
-          <p class="lead">目标站点 <code><%= stats.host %></code> 托管在 Cloudflare Pages。数据在 Cloudflare 侧采集，本机只负责读取，不需要公网后端。</p>
+          <p class="lead">监测目标 <code><%= stats.host %></code>，站点地址 <code><%= siteUrl %></code>。浏览数据由 Cloudflare Web Analytics 在浏览器侧采集，本机只负责读取，不需要公网后端。</p>
         </div>
         <div class="steps">
           <div class="step">
@@ -125,7 +125,7 @@
             <div class="step-n">02</div>
             <div class="step-body">
               <h3>触发一次部署，确认 beacon 已注入</h3>
-              <p>验证：<code>curl -s https://<%= stats.host %>/ | grep cloudflareinsights</code> 能看到 <code>beacon.min.js</code>。</p>
+              <p>验证：<code>curl -s <%= siteUrl %> | grep cloudflareinsights</code> 能看到 <code>beacon.min.js</code>。</p>
               <p class="hint">不重新部署，页面里不会有采集脚本，统计会一直为零。</p>
             </div>
           </div>
@@ -301,7 +301,7 @@
 
 <script>
 document.getElementById('openSite').addEventListener('click', function(){
-  window.open('https://<%= stats.host %>/', '_blank');
+  window.open(<%- JSON.stringify(siteUrl) %>, '_blank');
 });
 </script>
 <%- include('theme-ui') %>

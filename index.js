@@ -92,6 +92,13 @@ app.use((req, res, next) => {
   next();
 });
 
+/* 所有模板共用的「打开作品集」地址。必须独立配置，不能从 CF_HOST 拼：
+   CF_HOST 只有主机名，而 GitHub Pages 项目站的可访问地址带 /portfolio/ 子路径。 */
+app.use((req, res, next) => {
+  res.locals.siteUrl = cloudflare.config().portfolioUrl;
+  next();
+});
+
 /* ─────────────── 入口请求日志（含爬虫 / 扫描识别） ───────────────
    必须放在访问控制之前：被密码挡下的扫描请求同样是真实入侵尝试，也要留痕。
    作品集埋点走 /api/track 单独入库，不在这里重复计数；健康探针单列。

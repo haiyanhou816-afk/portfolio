@@ -20,6 +20,22 @@ const ENV_FILE = path.join(__dirname, '.env');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 const DEFAULT_ENDPOINT = 'https://api.cloudflare.com/client/v4/graphql';
 const DEFAULT_HOST = 'haiyanhou816-afk.github.io';
+/* 「打开线上站点」按钮用的完整作品集地址，与 CF_HOST 相互独立。
+   CF_HOST 只是统计过滤用的主机名（不含子路径），不能拿它拼可点击的 URL：
+   GitHub Pages 项目站必须带 /portfolio/，根路径会返回 404。 */
+const DEFAULT_SITE_URL = 'https://haiyanhou816-afk.github.io/portfolio/';
+function normalizeSiteUrl(v) {
+  const raw = String(v == null ? '' : v).trim();
+  if (!raw) return DEFAULT_SITE_URL;
+  /* 含引号 / 尖括号 / 空白 / 反斜杠的一律视为填错，回退到默认地址，
+     避免把无效或被注入的内容拼进按钮脚本。 */
+  if (/[<>"'\s\\]/.test(raw)) return DEFAULT_SITE_URL;
+  let u = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+  /* 只填了主机名（如 portfolio-6zk.pages.dev）时补上根路径 */
+  u = u.replace(/^(https?:\/\/[^/]+)$/i, '$1/');
+  u = u.replace(/\/+$/, '/');
+  return /^https?:\/\/[a-z0-9.-]+(?::\d+)?\//i.test(u) ? u : DEFAULT_SITE_URL;
+}
 const CACHE_TTL = 60 * 1000;
 
 let cache = { at: 0, data: null };
@@ -59,6 +75,7 @@ function config() {
     accountId: pick('CF_ACCOUNT_ID', ''),
     siteTag: pick('CF_SITE_TAG', ''),
     host: pick('CF_HOST', DEFAULT_HOST),
+    portfolioUrl: normalizeSiteUrl(pick('PORTFOLIO_URL', DEFAULT_SITE_URL)),
     endpoint: pick('CF_GRAPHQL_ENDPOINT', DEFAULT_ENDPOINT)
   };
 }
@@ -69,7 +86,8 @@ function saveConfig(input) {
     CF_API_TOKEN: String(input.CF_API_TOKEN || fileConfig.CF_API_TOKEN || '').trim(),
     CF_ACCOUNT_ID: String(input.CF_ACCOUNT_ID || fileConfig.CF_ACCOUNT_ID || '').trim(),
     CF_SITE_TAG: String(input.CF_SITE_TAG || fileConfig.CF_SITE_TAG || '').trim(),
-    CF_HOST: String(input.CF_HOST || fileConfig.CF_HOST || DEFAULT_HOST).trim() || DEFAULT_HOST
+    CF_HOST: String(input.CF_HOST || fileConfig.CF_HOST || DEFAULT_HOST).trim() || DEFAULT_HOST,
+    PORTFOLIO_URL: normalizeSiteUrl(input.PORTFOLIO_URL || fileConfig.PORTFOLIO_URL || DEFAULT_SITE_URL)
   };
   fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
   const tmp = CONFIG_FILE + '.tmp';
@@ -91,6 +109,7 @@ function configuredKeys() {
     CF_ACCOUNT_ID: !!c.accountId,
     CF_SITE_TAG: !!c.siteTag,
     CF_HOST: c.host,
+    PORTFOLIO_URL: c.portfolioUrl,
     source: Object.keys(fileConfig).length ? 'online' : 'env'
   };
 }
@@ -102,7 +121,7 @@ function status() {
   if (!c.accountId) missing.push('CF_ACCOUNT_ID');
   if (!c.siteTag) missing.push('CF_SITE_TAG');
   return {
-    configured: missing.length === 0, missing, host: c.host,
+    configured: missing.length === 0, missing, host: c.host, portfolioUrl: c.portfolioUrl,
     status: missing.length ? 'not_configured' : 'configured',
     note: missing.length
       ? '这是可选配置，不是接口故障：未填写凭证时接口仍正常返回 200，只是不渲染统计数字。可在「数据源配置」页在线填写。'

@@ -275,7 +275,7 @@ tick(); setInterval(tick, 1000);
 var localHost = /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
 var portfolioUrl = localHost
   ? (location.protocol + '//' + location.hostname + ':5173/')
-  : 'https://haiyanhou816-afk.github.io/portfolio/';
+  : <%- JSON.stringify(siteUrl) %>;
 document.querySelectorAll('[data-portfolio-link]').forEach(function(a){ a.href = portfolioUrl; });
 var serviceUrlEl = document.getElementById('serviceUrl');
 if (serviceUrlEl) serviceUrlEl.textContent = location.origin + '/dashboard';
