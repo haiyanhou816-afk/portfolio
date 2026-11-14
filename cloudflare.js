@@ -8,7 +8,7 @@
  *   CF_ACCOUNT_ID  Cloudflare Account ID（32 位十六进制）
  *   CF_SITE_TAG    Web Analytics 的 site_tag（rum/site_info/list 返回的 site_tag，用于 GraphQL filter.siteTag）
  *                 注意：它与 beacon 片段里的 token（site_token）、onboarding 引导页临时 token 三者可能不同，勿混用
- *   CF_HOST        要统计的主机名，默认 portfolio-6zk.pages.dev
+ *   CF_HOST        要统计的主机名，默认 haiyanhou816-afk.github.io（作品集主站）
  *
  * 注意：GraphQL 查询级错误以 HTTP 200 + errors[] 返回，必须检查 errors[]。
  *      一个 siteTag 可能覆盖多个主机名，必须按 requestHost 过滤。
@@ -19,7 +19,7 @@ const path = require('path');
 const ENV_FILE = path.join(__dirname, '.env');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 const DEFAULT_ENDPOINT = 'https://api.cloudflare.com/client/v4/graphql';
-const DEFAULT_HOST = 'portfolio-6zk.pages.dev';
+const DEFAULT_HOST = 'haiyanhou816-afk.github.io';
 const CACHE_TTL = 60 * 1000;
 
 let cache = { at: 0, data: null };

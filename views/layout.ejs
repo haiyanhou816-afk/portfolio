@@ -271,11 +271,11 @@ function tick(){
 }
 tick(); setInterval(tick, 1000);
 
-// 本机 / 局域网访问指向本地 5173 预览；公网访问指向已上线的 Cloudflare Pages 站点
+// 本机 / 局域网访问指向本地 5173 预览；公网访问指向作品集主站（GitHub Pages 新版）
 var localHost = /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
 var portfolioUrl = localHost
   ? (location.protocol + '//' + location.hostname + ':5173/')
-  : 'https://portfolio-6zk.pages.dev/';
+  : 'https://haiyanhou816-afk.github.io/portfolio/';
 document.querySelectorAll('[data-portfolio-link]').forEach(function(a){ a.href = portfolioUrl; });
 var serviceUrlEl = document.getElementById('serviceUrl');
 if (serviceUrlEl) serviceUrlEl.textContent = location.origin + '/dashboard';
