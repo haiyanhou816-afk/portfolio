@@ -433,9 +433,18 @@ export default function AsciiVignetteBloom({
     };
 
     /* ---- main loop ---- */
+    let lastDrawAt = 0;
     const frame = (time) => {
       rafId = 0;
       if (disposed) return;
+      /* 30fps 节流：每帧都要重画整张 ASCII 网格并跑 bloom 后处理，
+         60fps 会占满移动端主线程、滚动时明显掉帧；30fps 观感基本一致。
+         静态模式不受影响，resize 补帧仍然每帧都画。 */
+      if (!staticOnly && lastDrawAt && time - lastDrawAt < 30) {
+        rafId = requestAnimationFrame(frame);
+        return;
+      }
+      lastDrawAt = time;
       const cfg = cfgRef.current;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

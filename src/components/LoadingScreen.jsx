@@ -12,8 +12,9 @@ export default function LoadingScreen({ onComplete }) {
     let completed = false;
     const image = new Image();
     const startedAt = performance.now();
-    // 最短展示时长：给用户足够时间看清网格效果与四角信息
-    const minDuration = 4200;
+    // 最短展示时长：原为 4200ms，移动端等待过久会被当成「卡住」。
+    // 缩短后网格依旧随进度铺开，只是节奏更利落、内容更早可看。
+    const minDuration = 1100;
     let frameId;
     let completeTimeoutId;
 
@@ -21,7 +22,7 @@ export default function LoadingScreen({ onComplete }) {
       if (completed || !imageReady || !minTimeReady) return;
       completed = true;
       setProgress(100);
-      completeTimeoutId = window.setTimeout(onComplete, 620);
+      completeTimeoutId = window.setTimeout(onComplete, 320);
     };
 
     const markImageReady = () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -9,18 +9,21 @@ import Hobbies from './components/Hobbies';
 import CodexWorks from './components/CodexWorks';
 import Skills from './components/Skills';
 import Contact from './components/Contact';
-import DesignAnalyzer from './pages/DesignAnalyzer';
-import InspirationGallery from './components/InspirationGallery';
 import CustomCursor from './components/CustomCursor';
+
+/* 灵感页（three.js WebGL 雪景）和 AI 分析页（react-markdown）只在点进去时才需要。
+   拆成独立 chunk，首屏不再下载和解析这几块代码，视觉与功能都不变。 */
+const DesignAnalyzer = lazy(() => import('./pages/DesignAnalyzer'));
+const InspirationGallery = lazy(() => import('./components/InspirationGallery'));
 
 function FlowSection({ children, index }) {
   return (
     <motion.div
       className="site-flow__section"
-      initial={{ opacity: 0.92, y: 18, filter: 'blur(7px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0.92, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18, margin: '-12% 0px -12% 0px' }}
-      transition={{ duration: 1.15, delay: Math.min(index * 0.035, 0.16), ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.65, delay: Math.min(index * 0.035, 0.16), ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
@@ -51,10 +54,10 @@ function App() {
      */
     const timer = window.setTimeout(() => setIntro(false), 3100);
     /*
-     * 不等整个 3.1s 编排结束才放开滚动 —— 那样会像页面卡死。
-     * 1500ms 时首屏标题已经落位，此刻交还控制权，节奏和手感都成立。
+     * 入场编排继续跑，但滚动尽早交还给用户。
+     * 原 1500ms 锁太长，手指滑动没反应会被当成页面卡死。
      */
-    const unlock = window.setTimeout(() => setScrollLock(false), 1500);
+    const unlock = window.setTimeout(() => setScrollLock(false), 350);
     return () => {
       window.clearTimeout(timer);
       window.clearTimeout(unlock);
@@ -130,7 +133,9 @@ function App() {
   if (page === 'analyzer') {
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'light-theme' : ''}`}>
-        <DesignAnalyzer onBack={() => setPage('home')} />
+        <Suspense fallback={null}>
+          <DesignAnalyzer onBack={() => setPage('home')} />
+        </Suspense>
         <CustomCursor />
       </div>
     );
@@ -139,7 +144,9 @@ function App() {
   if (page === 'inspiration') {
     return (
       <>
-        <InspirationGallery onBack={() => setPage('home')} />
+        <Suspense fallback={null}>
+          <InspirationGallery onBack={() => setPage('home')} />
+        </Suspense>
         <CustomCursor />
       </>
     );

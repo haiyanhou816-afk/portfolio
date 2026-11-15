@@ -29,7 +29,7 @@
     <link rel="canonical" href="https://haiyanhou816-afk.github.io/portfolio/" />
 
     <!-- 版本迭代监测：每次发布把这个版本号 +1（也可由 CI 注入 git 短 hash） -->
-    <meta name="app-version" content="v2026.11.14" />
+    <meta name="app-version" content="v2026.11.15" />
     <!-- 入口监测上报端点：本地预览自动走 localhost:4000，线上走这个后台 -->
     <meta name="track-endpoint" content="https://portfolio-admin-15620.app.workbuddy.host/api/track" />
     <!-- 若发布平台要求分享码，把 sharecode 填这里，上报 URL 会自动带上 -->
@@ -37,7 +37,11 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- 字体 CSS 改为异步加载：fonts.googleapis.com 在国内常被拖到超时，
+         同步 stylesheet 会一直阻塞首屏渲染，表现就是打开后白屏好几秒。
+         这里先让页面用系统字体立刻显示，字体就绪后再切过去（URL 已带 display=swap）。 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
     <script type="module" src="/src/main.jsx"></script>
   </head>
   <body>

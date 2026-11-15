@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 
 const API_BASE = import.meta.env.DEV ? 'http://localhost:8765' : '';
-const DOG_IMAGE = asset('/folder-pet.png');
+const DOG_IMAGE = asset('/folder-pet-256.png');
 
 export default function DesktopPet({ onBack }) {
   const containerRef = useRef(null);
@@ -216,7 +216,7 @@ export default function DesktopPet({ onBack }) {
           <div className="grid grid-cols-3 gap-2">
             {images.slice(0, 6).map((img) => (
               <motion.div key={img.id} whileHover={{ scale: 1.05 }} className="aspect-square rounded-lg overflow-hidden bg-white/5 border border-white/5">
-                <img src={`${API_BASE}${img.url}`} alt="" className="w-full h-full object-cover" />
+                <img src={`${API_BASE}${img.url}`} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </motion.div>
             ))}
             {images.length === 0 && (

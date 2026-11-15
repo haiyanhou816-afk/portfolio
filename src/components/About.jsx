@@ -1,13 +1,16 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, lazy, Suspense } from "react";
 import { motion, useInView, animate } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { GraduationCap, Award, Building2, Briefcase } from "lucide-react";
-import PixelSnow from "./PixelSnow";
 import LogoLoop from "./LogoLoop";
 import AvatarSpotlight from "./AvatarSpotlight";
 import { asset } from "../utils/asset";
 import ExperienceTimeline from "./ExperienceTimeline";
+
+/* 雪景是 three.js 的 WebGL 背景，滚动到「关于」时才用得上。
+   延迟加载后首屏不再包含 three，打开速度能再快一截。 */
+const PixelSnow = lazy(() => import("./PixelSnow"));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -138,19 +141,21 @@ export default function About({ lang }) {
       transition={{ duration: 0.7 }}
     >
       <div className="about-pixel-snow" aria-hidden="true">
-        <PixelSnow
-          color="#c6d1dc"
-          flakeSize={0.008}
-          minFlakeSize={1}
-          pixelResolution={380}
-          speed={0.30}
-          depthFade={10}
-          farPlane={18}
-          brightness={0.46}
-          density={0.06}
-          variant="square"
-          direction={118}
-        />
+        <Suspense fallback={null}>
+          <PixelSnow
+            color="#c6d1dc"
+            flakeSize={0.008}
+            minFlakeSize={1}
+            pixelResolution={380}
+            speed={0.30}
+            depthFade={10}
+            farPlane={18}
+            brightness={0.46}
+            density={0.06}
+            variant="square"
+            direction={118}
+          />
+        </Suspense>
       </div>
       <div className="container-content relative z-10">
         <div ref={headerRef} className="mb-16">
