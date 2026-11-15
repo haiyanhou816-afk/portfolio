@@ -506,17 +506,30 @@ export default function AsciiVignetteBloom({
       rafId = 0;
     };
 
-    image.onload = () => {
+    const markImageReady = () => {
+      if (disposed || imageReady || image.naturalWidth === 0) return;
       imageReady = true;
-      resize();
+      resize(); // 重新按图片采样格子，之前 imageReady=false 时 cells 是空的
       stopLoop();
       startLoop();
+      redrawOnce(); // startLoop 被暂停时，至少补画一帧
     };
+
+    image.onload = markImageReady;
     image.onerror = () => {
-      imageReady = false;
-      resize();
+      // 不把 imageReady 置回 false，交给下面的 decode / 超时兜底再试
     };
     image.src = src;
+
+    /* 部分移动端 WebView 不会触发 Image 的 onload，但 decode() 能成功；
+       只等 onload 会让画布永远停在黑底，开屏图像和逐格动画全都看不见。
+       这里不等 onload，直接解码一次，再加一道 complete/naturalWidth 兜底。 */
+    if (typeof image.decode === "function") {
+      image.decode().then(markImageReady).catch(() => {});
+    }
+    const readyTimeout = window.setTimeout(() => {
+      if (!imageReady && image.complete && image.naturalWidth > 0) markImageReady();
+    }, 1500);
 
     resize();
     // 即使初始为 paused 也先画一帧，保证揭示瞬间就有内容而非空白
@@ -551,6 +564,7 @@ export default function AsciiVignetteBloom({
 
     return () => {
       disposed = true;
+      window.clearTimeout(readyTimeout);
       loopRef.current = { start: null, stop: null, redraw: null };
       stopLoop();
       observer.disconnect();

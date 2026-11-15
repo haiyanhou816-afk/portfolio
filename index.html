@@ -28,8 +28,12 @@
 
     <link rel="canonical" href="https://haiyanhou816-afk.github.io/portfolio/" />
 
+    <!-- 开屏 ASCII 图像与首屏共用这张图，提前并行下载，
+         否则要等 JS 挂载后才开始请求，加载页前半程一直是空的。 -->
+    <link rel="preload" as="image" href="./hero-bg.jpg" fetchpriority="high">
+
     <!-- 版本迭代监测：每次发布把这个版本号 +1（也可由 CI 注入 git 短 hash） -->
-    <meta name="app-version" content="v2026.11.15.1" />
+    <meta name="app-version" content="v2026.11.15.2" />
     <!-- 入口监测上报端点：本地预览自动走 localhost:4000，线上走这个后台 -->
     <meta name="track-endpoint" content="https://portfolio-admin-15620.app.workbuddy.host/api/track" />
     <!-- 若发布平台要求分享码，把 sharecode 填这里，上报 URL 会自动带上 -->

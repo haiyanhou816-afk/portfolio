@@ -12,9 +12,9 @@ export default function LoadingScreen({ onComplete }) {
     let completed = false;
     const image = new Image();
     const startedAt = performance.now();
-    // 最短展示时长：原为 4200ms，移动端等待过久会被当成「卡住」。
-    // 缩短后网格依旧随进度铺开，只是节奏更利落、内容更早可看。
-    const minDuration = 1100;
+    // 最短展示时长：原为 4200ms 太拖，1100ms 又来不及看清逐格揭示动画。
+    // 折中到 1800ms，配合图片预载，网格能完整铺开又不让人久等。
+    const minDuration = 1800;
     let frameId;
     let completeTimeoutId;
     let imageTimeoutId;
@@ -27,29 +27,30 @@ export default function LoadingScreen({ onComplete }) {
     };
 
     const markImageReady = () => {
+      if (imageReady || image.naturalWidth === 0) return;
       imageReady = true;
       complete();
     };
 
-    image.onload = () => {
-      if (image.decode) {
-        image.decode().then(markImageReady).catch(markImageReady);
-      } else {
-        markImageReady();
-      }
+    image.onload = markImageReady;
+    image.onerror = () => {
+      imageReady = true; // 图片失败也放行，别让加载页卡住
+      complete();
     };
-    image.onerror = markImageReady;
     image.src = asset("/hero-bg.jpg");
+    // 部分 WebView 不触发 onload，decode() 却可用；不等回调，直接解码
+    if (typeof image.decode === "function") {
+      image.decode().then(markImageReady).catch(() => {});
+    }
 
-    /* 兜底：部分移动端 WebView 里 image.decode() 的 Promise 可能永远不 settle，
-       弱网下图片请求也可能一直挂着、连 onerror 都不触发。上面两个条件缺一个，
-       加载页就会永远停在 096%。这里最多等 2600ms 强制放行，保证网站一定能进。 */
+    /* 兜底：弱网下图片请求可能一直挂着、连 onerror 都不触发。上面两个条件缺一个，
+       加载页就会永远停在 096%。这里最多等 3000ms 强制放行，保证网站一定能进。 */
     imageTimeoutId = window.setTimeout(() => {
       if (completed) return;
       imageReady = true;
       minTimeReady = true;
       complete();
-    }, 2600);
+    }, 3000);
 
     const tick = (now) => {
       const elapsed = Math.min((now - startedAt) / minDuration, 1);
