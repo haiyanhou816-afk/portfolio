@@ -17,6 +17,7 @@ export default function LoadingScreen({ onComplete }) {
     const minDuration = 1100;
     let frameId;
     let completeTimeoutId;
+    let imageTimeoutId;
 
     const complete = () => {
       if (completed || !imageReady || !minTimeReady) return;
@@ -40,6 +41,16 @@ export default function LoadingScreen({ onComplete }) {
     image.onerror = markImageReady;
     image.src = asset("/hero-bg.jpg");
 
+    /* 兜底：部分移动端 WebView 里 image.decode() 的 Promise 可能永远不 settle，
+       弱网下图片请求也可能一直挂着、连 onerror 都不触发。上面两个条件缺一个，
+       加载页就会永远停在 096%。这里最多等 2600ms 强制放行，保证网站一定能进。 */
+    imageTimeoutId = window.setTimeout(() => {
+      if (completed) return;
+      imageReady = true;
+      minTimeReady = true;
+      complete();
+    }, 2600);
+
     const tick = (now) => {
       const elapsed = Math.min((now - startedAt) / minDuration, 1);
       // 近线性 + 尾段减速：全程匀速爬升，最后 15% 放慢一半，结尾正好收在 96%
@@ -58,6 +69,7 @@ export default function LoadingScreen({ onComplete }) {
     return () => {
       cancelAnimationFrame(frameId);
       window.clearTimeout(completeTimeoutId);
+      window.clearTimeout(imageTimeoutId);
     };
   }, [onComplete]);
 
