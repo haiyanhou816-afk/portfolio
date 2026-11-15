@@ -1,4 +1,4 @@
-import { useRef, useEffect, lazy, Suspense } from "react";
+import { useRef, useEffect, lazy, Suspense, useState } from "react";
 import { motion, useInView, animate } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -70,11 +70,34 @@ const aboutLogoItems = [
 
 export default function About({ lang }) {
   const z = lang === "zh";
+  const touchOnly = typeof window !== "undefined" && (window.matchMedia?.("(hover: none)")?.matches ?? false);
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
   const logoStripRef = useRef(null);
   const leftColRef = useRef(null);
   const rightColRef = useRef(null);
+  const snowRef = useRef(null);
+  /* 雪景原来是挂载就下载 three.js 并创建覆盖整个区块的 WebGL 画布（手机上约
+     804×4500 像素、持续重绘），首屏带宽和滚动流畅度都吃亏。桌面改为滚到附近
+     再加载；触屏设备直接不用这层几乎看不见的装饰，保持页面轻快。 */
+  const [snowOn, setSnowOn] = useState(false);
+
+  useEffect(() => {
+    const coarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    if (coarse) return undefined;
+    if (typeof IntersectionObserver === "undefined" || !snowRef.current) {
+      setSnowOn(true);
+      return undefined;
+    }
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setSnowOn(true);
+        io.disconnect();
+      }
+    }, { rootMargin: "500px 0px" });
+    io.observe(snowRef.current);
+    return () => io.disconnect();
+  }, []);
 
   // GSAP ScrollTrigger for sophisticated entrance animation
   useEffect(() => {
@@ -140,22 +163,24 @@ export default function About({ lang }) {
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7 }}
     >
-      <div className="about-pixel-snow" aria-hidden="true">
-        <Suspense fallback={null}>
-          <PixelSnow
-            color="#c6d1dc"
-            flakeSize={0.008}
-            minFlakeSize={1}
-            pixelResolution={380}
-            speed={0.30}
-            depthFade={10}
-            farPlane={18}
-            brightness={0.46}
-            density={0.06}
-            variant="square"
-            direction={118}
-          />
-        </Suspense>
+      <div className="about-pixel-snow" ref={snowRef} aria-hidden="true">
+        {snowOn && (
+          <Suspense fallback={null}>
+            <PixelSnow
+              color="#c6d1dc"
+              flakeSize={0.008}
+              minFlakeSize={1}
+              pixelResolution={380}
+              speed={0.30}
+              depthFade={10}
+              farPlane={18}
+              brightness={0.46}
+              density={0.06}
+              variant="square"
+              direction={118}
+            />
+          </Suspense>
+        )}
       </div>
       <div className="container-content relative z-10">
         <div ref={headerRef} className="mb-16">
@@ -201,7 +226,9 @@ export default function About({ lang }) {
             <div className="flex items-baseline justify-between mb-6">
               <h3 className="text-xl font-bold" style={{ color: "var(--text-main)" }}>{z ? "工作经历" : "Experience"}</h3>
               <span className="text-xs" style={{ color: "var(--text-dim)" }}>
-                {z ? "悬浮查看职责与成果" : "Hover to reveal details"}
+                {touchOnly
+                  ? (z ? "以下为各段职责与成果" : "Details for each role")
+                  : (z ? "悬浮查看职责与成果" : "Hover to reveal details")}
               </span>
             </div>
             <ExperienceTimeline lang={lang} />

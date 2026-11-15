@@ -54,9 +54,21 @@
 }
 
 @media (max-width: 760px) {
+  /* 容器宽度由组件固定为 780px，原来只 scale(.78) 仍有 608px，
+     在 402px 手机上整叠卡片被推到屏幕右侧、大半看不见。
+     先把容器中心对齐父级中心（780/2），再整体缩到半宽，落回视口内。 */
   .bounce-cards {
-    transform: scale(.78);
+    position: relative;
+    left: 50%;
+    margin-left: -390px;
+    transform: scale(.62);
     transform-origin: center center;
+  }
+
+  /* 缩放后占位文案也要跟着放大，否则只有 5px 完全读不清 */
+  .bounce-cards__placeholder {
+    font-size: 20px;
+    letter-spacing: .08em;
   }
 }
 

@@ -1067,6 +1067,15 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
 }
 
 @media (max-width: 760px) {
+  /* 手机端把入场编排压缩约一半：加载页退场后标题更快出现，桌面节奏不变。
+     最长 0.82s + 1.15s 动画，App.jsx 的 site-intro 时长同步设为 2.2s。 */
+  .site-intro .hero-statusbar { animation-delay: .5s; }
+  .site-intro .portfolio-hero__eyebrow { animation-delay: .56s; }
+  .site-intro .portfolio-hero__title { animation-delay: .62s; }
+  .site-intro .portfolio-hero__footer-copy { animation-delay: .7s; }
+  .site-intro .portfolio-hero__scroll { animation-delay: .78s; }
+  .site-intro .portfolio-hero__stamp { animation-delay: .82s; }
+
   .hero-ascii {
     opacity: .42;
   }

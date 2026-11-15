@@ -1,9 +1,12 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { asset } from '../utils/asset';
 
 const STYLE = `*, *::before, *::after { cursor: none !important; }`;
 
 export default function CustomCursor() {
+  /* 触屏没有鼠标指针。原来这支手指图标会停在左上角 (0,0) 挡住 logo，
+     还会通过 cursor:none 把桌面光标语义带到手机。只在真鼠标设备启用。 */
+  const [enabled, setEnabled] = useState(false);
   const elRef = useRef(null);
   const posRef = useRef({ x: 0, y: 0 });
   const pressedRef = useRef(false);
@@ -20,6 +23,16 @@ export default function CustomCursor() {
   }, []);
 
   useEffect(() => {
+    const mq = window.matchMedia?.('(hover: hover) and (pointer: fine)');
+    if (!mq) { setEnabled(true); return undefined; }
+    const sync = () => setEnabled(mq.matches);
+    sync();
+    mq.addEventListener?.('change', sync);
+    return () => mq.removeEventListener?.('change', sync);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
     const onMove = (e) => {
       posRef.current = { x: e.clientX, y: e.clientY };
       if (!rafRef.current) {
@@ -50,7 +63,9 @@ export default function CustomCursor() {
       window.removeEventListener('mouseup', onUp);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [paint]);
+  }, [paint, enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>

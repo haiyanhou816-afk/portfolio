@@ -33,7 +33,7 @@
     <link rel="preload" as="image" href="./hero-bg.jpg" fetchpriority="high">
 
     <!-- 版本迭代监测：每次发布把这个版本号 +1（也可由 CI 注入 git 短 hash） -->
-    <meta name="app-version" content="v2026.11.15.2" />
+    <meta name="app-version" content="v2026.11.15.3" />
     <!-- 入口监测上报端点：本地预览自动走 localhost:4000，线上走这个后台 -->
     <meta name="track-endpoint" content="https://portfolio-admin-15620.app.workbuddy.host/api/track" />
     <!-- 若发布平台要求分享码，把 sharecode 填这里，上报 URL 会自动带上 -->
@@ -96,8 +96,21 @@
         } catch (e) {}
       })();
     </script>
-    <!-- Cloudflare Web Analytics -->
-    <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "9f1c1d6e029140a8a3f4c8cf76884bd2"}'></script>
+    <!-- Cloudflare Web Analytics：手机端首屏带宽有限，等页面稳定后再注入，
+         避免这个跨域脚本在加载页阶段和 JS / 开屏图抢连接。统计功能不变。 -->
+    <script>
+      window.addEventListener('load', function () {
+        window.setTimeout(function () {
+          try {
+            var s = document.createElement('script');
+            s.defer = true;
+            s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+            s.setAttribute('data-cf-beacon', '{"token": "9f1c1d6e029140a8a3f4c8cf76884bd2"}');
+            document.body.appendChild(s);
+          } catch (e) {}
+        }, 1800);
+      }, { once: true });
+    </script>
     <!-- End Cloudflare Web Analytics -->
   </body>
 </html>

@@ -21,6 +21,7 @@ function buildGridItems(z) {
 
 export default function Featured({ lang }) {
   const z = lang === "zh";
+  const touchOnly = typeof window !== "undefined" && (window.matchMedia?.("(pointer: coarse)")?.matches ?? false);
   const [selected, setSelected] = useState(null);
   const gridItems = useMemo(() => buildGridItems(z), [z]);
 
@@ -54,8 +55,8 @@ export default function Featured({ lang }) {
           </h2>
           <p>
             {z
-              ? "鼠标移动探索每一层作品，点击任意图片查看项目详情。"
-              : "Move to explore the archive. Click any image to view project details."}
+              ? (touchOnly ? "轻点任意图片查看项目详情。" : "鼠标移动探索每一层作品，点击任意图片查看项目详情。")
+              : (touchOnly ? "Tap any image to view project details." : "Move to explore the archive. Click any image to view project details.")}
           </p>
         </div>
 

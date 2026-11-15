@@ -49,10 +49,12 @@ function App() {
     if (!intro) return undefined;
     /*
      * 必须等最后一个文字动画彻底结束再摘掉 site-intro，
-     * 否则 animation-delay 会从 1.7s 跳回 0.5s，已完成的动画被重算导致闪跳。
-     * 最长时序：stamp 延迟 1.7s + 时长 1.15s = 2.85s，留一点余量。
+     * 否则 animation-delay 会跳回短节奏，已完成的动画被重算导致闪跳。
+     * 桌面最长 1.7s + 1.15s = 2.85s，留余量到 3.1s；
+     * 手机端 CSS 把延迟压到 0.82s，2.2s 就够，首屏文字早约 0.9s 出现。
      */
-    const timer = window.setTimeout(() => setIntro(false), 3100);
+    const introDuration = window.matchMedia?.('(max-width: 760px)')?.matches ? 2200 : 3100;
+    const timer = window.setTimeout(() => setIntro(false), introDuration);
     /*
      * 入场编排继续跑，但滚动尽早交还给用户。
      * 原 1500ms 锁太长，手指滑动没反应会被当成页面卡死。

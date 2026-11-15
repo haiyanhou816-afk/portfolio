@@ -48,9 +48,9 @@ async function copyText(text) {
  * 遮罩与真实值等长，字符 1:1 替换，所以揭示过程中不会有布局跳动。
  * 真实值始终以 sr-only 留在 DOM 里，读屏和爬虫读到的是完整信息，不受视觉遮罩影响。
  */
-function MaskedReveal({ value, active }) {
+function MaskedReveal({ value, active, instant = false }) {
   const total = value.length;
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(instant ? total : 0);
 
   useEffect(() => {
     const target = active ? total : 0;
@@ -86,6 +86,9 @@ function MaskedReveal({ value, active }) {
 
 export default function Contact({ lang }) {
   const z = lang === "zh";
+  /* 触屏没有 hover：星号遮罩在手机上等于把联系方式藏起来。
+     手机端直接显示完整地址，桌面仍保留打字机揭示的交互。 */
+  const touchOnly = typeof window !== "undefined" && (window.matchMedia?.("(hover: none)")?.matches ?? false);
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
   const cardsRef = useRef({ list: [] });
@@ -288,7 +291,7 @@ export default function Contact({ lang }) {
             const isWechat = item.id === "wechat";
             const isMail = item.id === "email" || item.id === "email-alt";
             const Tag = item.href ? "a" : "button";
-            const isActive = activeCard === item.id;
+            const isActive = activeCard === item.id || touchOnly;
 
             // 触屏没有 hover 语义，pointerenter/leave 会在一次点按里连闪一次，
             // 所以触屏交给 click 处理：点一下揭示并保持。
@@ -350,7 +353,7 @@ export default function Contact({ lang }) {
                     className="text-base font-semibold mb-2 break-all"
                     style={{ color: "var(--text-main)", fontFamily: "var(--font-mono)" }}
                   >
-                    <MaskedReveal value={item.value} active={isActive} />
+                    <MaskedReveal value={item.value} active={isActive} instant={touchOnly} />
                   </div>
 
                   {/* Desc / copy feedback */}

@@ -49,7 +49,7 @@ export default function Header({ lang, setLang, theme, setTheme, onNavigate, onI
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.96 }}
             transition={{ duration: 0.3 }}
-            className="fixed left-0 right-0 top-2 z-50 flex justify-center px-4 pointer-events-none"
+            className="fixed left-0 right-0 top-2 z-50 hidden lg:flex justify-center px-4 pointer-events-none"
           >
             <div className={`pointer-events-auto flex items-center rounded-full border backdrop-blur-xl transition-colors duration-300 ${
               isDark

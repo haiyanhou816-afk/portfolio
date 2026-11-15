@@ -70,11 +70,13 @@ const CHAR_MS = 14;
  * ghost 层是原文本身（opacity 0），负责撑开高度并留给读屏软件；
  * typed 层绝对定位，只做视觉。离开时不做反向删字 —— 收起要比展开果断。
  */
-function TypedLine({ text, active, delay = 0 }) {
-  const [count, setCount] = useState(0);
-  const [started, setStarted] = useState(false);
+function TypedLine({ text, active, delay = 0, instant = false }) {
+  const [count, setCount] = useState(instant ? text.length : 0);
+  const [started, setStarted] = useState(instant);
 
   useEffect(() => {
+    // 触屏没有 hover 语义，直接把全文摆出来，不跑逐字动画
+    if (instant) return undefined;
     if (!active) {
       setCount(0);
       setStarted(false);
@@ -101,7 +103,7 @@ function TypedLine({ text, active, delay = 0 }) {
       setCount((current) => Math.min(current + 1, text.length));
     }, CHAR_MS);
     return () => window.clearTimeout(stepTimer);
-  }, [active, started, count, text, delay]);
+  }, [active, started, count, text, delay, instant]);
 
   const typing = started && count < text.length;
 
@@ -119,11 +121,14 @@ function TypedLine({ text, active, delay = 0 }) {
 export default function ExperienceTimeline({ lang }) {
   const z = lang === "zh";
   const [activeIndex, setActiveIndex] = useState(-1);
+  /* 触屏设备无法 hover：默认把三段的职责与成果完整显示出来，
+     桌面仍保留「悬浮逐字展开」的节奏。 */
+  const touchOnly = typeof window !== "undefined" && (window.matchMedia?.("(hover: none)")?.matches ?? false);
 
   return (
     <ol className="exp-timeline">
       {EXPERIENCES.map((exp, i) => {
-        const isActive = activeIndex === i;
+        const isActive = touchOnly || activeIndex === i;
         const duty = z ? exp.dutyZh : exp.dutyEn;
         const result = z ? exp.resultZh : exp.resultEn;
 
@@ -155,7 +160,7 @@ export default function ExperienceTimeline({ lang }) {
             <div className="exp-row__detail">
               <div className="exp-row__block">
                 <span className="exp-row__label">{z ? "职责" : "Responsibility"}</span>
-                <TypedLine key={`duty-${lang}`} text={duty} active={isActive} />
+                <TypedLine key={`duty-${lang}`} text={duty} active={isActive} instant={touchOnly} />
               </div>
               <div className="exp-row__block">
                 <span className="exp-row__label">{z ? "成果" : "Outcome"}</span>
@@ -163,6 +168,7 @@ export default function ExperienceTimeline({ lang }) {
                   key={`result-${lang}`}
                   text={result}
                   active={isActive}
+                  instant={touchOnly}
                   delay={duty.length * CHAR_MS + 180}
                 />
               </div>

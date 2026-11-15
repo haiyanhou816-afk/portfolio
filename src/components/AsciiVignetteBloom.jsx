@@ -177,6 +177,9 @@ export default function AsciiVignetteBloom({
     const start = performance.now();
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
     const staticOnly = reduceMotion || !cfgRef.current.animated;
+    /* 触屏设备（iPhone 等）把画布像素密度降到 1.5x、帧率降到约 22fps：
+       格子是像素风，肉眼几乎无差，但每帧要重画的像素少 44%，滚动更顺。 */
+    const coarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
 
     const image = new Image();
     let imageReady = false;
@@ -231,7 +234,7 @@ export default function AsciiVignetteBloom({
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const nextDpr = Math.min(window.devicePixelRatio || 1, coarsePointer ? 1.5 : 2);
       const nextW = Math.max(1, Math.round(rect.width));
       const nextH = Math.max(1, Math.round(rect.height));
       if (nextW === width && nextH === height && nextDpr === dpr && cells.length) return;
@@ -437,10 +440,10 @@ export default function AsciiVignetteBloom({
     const frame = (time) => {
       rafId = 0;
       if (disposed) return;
-      /* 30fps 节流：每帧都要重画整张 ASCII 网格并跑 bloom 后处理，
-         60fps 会占满移动端主线程、滚动时明显掉帧；30fps 观感基本一致。
+      /* 30fps 节流（触屏 22fps）：每帧都要重画整张 ASCII 网格并跑 bloom 后处理，
+         60fps 会占满移动端主线程、滚动时明显掉帧；降帧观感基本一致。
          静态模式不受影响，resize 补帧仍然每帧都画。 */
-      if (!staticOnly && lastDrawAt && time - lastDrawAt < 30) {
+      if (!staticOnly && lastDrawAt && time - lastDrawAt < (coarsePointer ? 45 : 30)) {
         rafId = requestAnimationFrame(frame);
         return;
       }

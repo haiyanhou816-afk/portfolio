@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import "./GridMotion.css";
 
@@ -15,6 +15,9 @@ export default function GridMotion({ items = [], gradientColor = "black", onItem
   const rowRefs = useRef([]);
   const mouseXRef = useRef(typeof window === "undefined" ? 0 : window.innerWidth / 2);
   const isVisibleRef = useRef(false);
+  /* 28 格作品缩略图约 300KB，原来首屏挂载就全部下载，和开屏图 / JS 抢带宽。
+     等网格接近视口再挂 backgroundImage；另有 4s 兜底，保证图一定会出现。 */
+  const [imagesReady, setImagesReady] = useState(false);
 
   const totalItems = 28;
   const defaultItems = Array.from({ length: totalItems }, (_, index) => `Item ${index + 1}`);
@@ -22,14 +25,24 @@ export default function GridMotion({ items = [], gradientColor = "black", onItem
 
   useEffect(() => {
     const container = rowRefs.current[0]?.parentElement;
-    if (!container) return undefined;
+    if (!container) {
+      setImagesReady(true);
+      return undefined;
+    }
 
     const observer = new IntersectionObserver(([entry]) => {
       isVisibleRef.current = entry.isIntersecting;
-    }, { threshold: 0 });
+      if (entry.isIntersecting) setImagesReady(true);
+    }, { threshold: 0, rootMargin: '400px 0px' });
 
     observer.observe(container);
-    return () => observer.disconnect();
+    // 兜底：个别 WebView 的 IntersectionObserver 不回调时，等首屏彻底稳定再放行，
+    // 避免用户停在首屏就被 28 张缩略图占满带宽
+    const fallback = window.setTimeout(() => setImagesReady(true), 15000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   useEffect(() => {
@@ -125,7 +138,7 @@ export default function GridMotion({ items = [], gradientColor = "black", onItem
                   >
                     <div className="grid-motion__item-inner">
                       {isImageSource(content) ? (
-                        <div className="grid-motion__item-image" style={{ backgroundImage: `url(${content})` }} />
+                        <div className="grid-motion__item-image" style={{ backgroundImage: imagesReady ? `url(${content})` : "none" }} />
                       ) : (
                         <div className="grid-motion__item-content">{content}</div>
                       )}
