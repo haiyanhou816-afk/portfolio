@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import ScrollFloatBand from './components/ScrollFloatBand';
 import LoadingScreen from './components/LoadingScreen';
 import About from './components/About';
 import Featured from './components/Featured';
@@ -170,8 +169,6 @@ function App() {
       />
       <main className="site-flow">
         <Hero lang={lang} theme={theme} intro={intro} pending={loading} />
-
-        <ScrollFloatBand />
 
         <FlowSection index={0}><About lang={lang} /></FlowSection>
         <FlowSection index={1}><Featured lang={lang} /></FlowSection>
