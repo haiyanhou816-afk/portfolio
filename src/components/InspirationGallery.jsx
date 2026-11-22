@@ -85,18 +85,34 @@ export default function InspirationGallery({ onBack }) {
   const initializedRef = useRef(false);
 
   /*
-   * 灵感库只读本地 IndexedDB。
-   * 原来这里会 fetch /inspiration/manifest.json 预载一批图片，
-   * 但那些图来自 Dribbble / 站酷 / 花瓣，不是本人作品，
-   * 随站点公开发布并不合适，所以预设图连同 public/inspiration 一起移除了。
-   * 需要用的时候自己拖拽或 Ctrl+V 粘贴即可，数据只留在本地浏览器。
+   * 灵感库 = 站点预置灵感图 + 本地浏览器自己上传的图。
+   * 预置图来自 public/inspiration/manifest.json（随站点发布，只读、不可删除）；
+   * 用户拖拽 / Ctrl+V 粘贴的图只存本地 IndexedDB。
    */
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    getAllImages()
-      .then(setImages)
-      .catch((err) => console.error('读取本地灵感库失败:', err));
+    var base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    Promise.all([
+      getAllImages().catch(() => []),
+      fetch(base + '/inspiration/manifest.json')
+        .then((r) => (r.ok ? r.json() : []))
+        .catch(() => []),
+    ]).then(function (res) {
+      var local = res[0] || [];
+      var preset = (res[1] || []).map(function (m, i) {
+        return {
+          id: 'preset-' + i,
+          description: m.description || '',
+          tags: m.tags || [],
+          dataUrl: base + '/inspiration/' + m.file,
+          createdAt: m.createdAt || '',
+          source: m.source || '',
+          preset: true,
+        };
+      });
+      setImages(preset.concat(local));
+    });
   }, []);
 
   // ---- 添加图片（统一入口） ----
@@ -365,7 +381,8 @@ export default function InspirationGallery({ onBack }) {
                     />
                   </div>
 
-                  {/* 长按删除，避免误触 */}
+                  {/* 长按删除，避免误触（预置图为站点自带，不可删除） */}
+                  {!img.preset && (
                   <div
                     className="absolute top-2 right-2 z-10 opacity-70 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200"
                     onClick={(e) => e.stopPropagation()}
@@ -392,6 +409,7 @@ export default function InspirationGallery({ onBack }) {
                       删除
                     </HoldButton>
                   </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -454,6 +472,7 @@ export default function InspirationGallery({ onBack }) {
                     {new Date(selectedImage.createdAt).toLocaleString('zh-CN')}
                   </span>
                 </div>
+                {!selectedImage.preset && (
                 <div className="mt-4 flex justify-end">
                   <HoldButton
                     doneLabel="已删除"
@@ -476,6 +495,7 @@ export default function InspirationGallery({ onBack }) {
                     长按删除
                   </HoldButton>
                 </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
