@@ -149,7 +149,7 @@ a:hover{text-decoration:underline}
 @keyframes pulse{50%{box-shadow:0 0 0 6px var(--accent-clear)}}
 
 /* ---------- 主区与大标题 ---------- */
-.main{flex:1;min-width:0;padding:0 44px 76px;max-width:1440px}
+.main{flex:1;min-width:0;padding:0 44px 76px;max-width:1240px;margin-left:auto;margin-right:auto}
 .top{min-height:112px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);margin-bottom:26px}
 .crumb{font-size:12px;font-weight:500;letter-spacing:.01em;color:var(--faint)}
 .crumb b{display:block;color:var(--ink);font-size:28px;font-weight:600;letter-spacing:-.9px;margin-top:8px;text-transform:none;line-height:1.2}
@@ -698,7 +698,7 @@ body.side-collapsed .main{padding-left:72px}
       proximity:120, strength:0.7, bounce:0.6, tension:0.4,
       returnDuration:0.8, shockRadius:320, shockStrength:5,
       swell:0.8, stretch:0.32, glow:0.4, shape:'circle', fade:0,
-      opacity:1, intro:true, mouseInteraction:true, clickShock:true,
+      opacity:0.62, intro:true, mouseInteraction:true, clickShock:true,
       paused:false, dpr:(window.devicePixelRatio||1)
     };
 
@@ -749,7 +749,7 @@ void main(){
     vec2 edge=min(vPoint,uResolution-vPoint)/(uFade*0.4*min(uResolution.x,uResolution.y));
     fade=smootherstep01(edge.x)*smootherstep01(edge.y);
   }
-  float pointAlpha=mix(0.5,1.0,clamp(vEnergy*1.4,0.0,1.0));
+  float pointAlpha=mix(0.38,1.0,clamp(vEnergy*1.4,0.0,1.0));
   alpha*=uOpacity*fade*pointAlpha;outColor=vec4(color*alpha,alpha);
 }`;
 
