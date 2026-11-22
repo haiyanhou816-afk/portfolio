@@ -694,7 +694,7 @@ body.side-collapsed .main{padding-left:72px}
     window.__dotGridBooted = true;
     var reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     var S = {
-      dotSize:5, gap:18, baseColor:'#201e28', activeColor:'#ffffff',
+      dotSize:5, gap:34, baseColor:'#201e28', activeColor:'#ffffff',
       proximity:120, strength:0.7, bounce:0.6, tension:0.4,
       returnDuration:0.8, shockRadius:320, shockStrength:5,
       swell:0.8, stretch:0.32, glow:0.4, shape:'circle', fade:0,
@@ -820,7 +820,7 @@ void main(){
     }
     function resize(){
       var rect=canvas.getBoundingClientRect();
-      var ratio=Math.min(S.dpr||window.devicePixelRatio||1,2);
+      var ratio=Math.min(S.dpr||window.devicePixelRatio||1,1.5);
       var w=Math.max(1,Math.round(rect.width)),h=Math.max(1,Math.round(rect.height));
       view.width=w;view.height=h;view.left=rect.left;view.top=rect.top;view.ratio=ratio;
       canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
@@ -844,7 +844,7 @@ void main(){
       var coupling=(Math.max(0,S.tension)*900)**2/(grid.cell*grid.cell);
       var viscosity=Math.sqrt(coupling)*0.06;
       var limit=Math.sqrt(stiffness+8*coupling)+damping+8*viscosity;
-      var steps=Math.min(24,Math.max(1,Math.ceil(dt/Math.min(1/120,1.2/limit))));
+      var steps=Math.min(8,Math.max(1,Math.ceil(dt/Math.min(1/120,1.2/limit))));
       var h=dt/steps;
       for(var i=0;i<grid.count;i++){
         var index=i*2, rx=rest[index], ry=rest[index+1], ax=0, ay=0;
@@ -984,7 +984,10 @@ void main(){
         pointer.vx+=(vx-pointer.vx)*0.6;pointer.vy+=(vy-pointer.vy)*0.6;
       }else{ pointer.vx=0;pointer.vy=0; }
       pointer.x=x;pointer.y=y;pointer.time=time;
-      if(inside!==pointer.inside||inside){ pointer.inside=inside;wake(); }
+      pointer.inside=inside;
+      // 只在渲染循环休眠时唤醒；活跃帧里 pointermove 仅更新坐标，
+      // 由 frame() 自己续帧，避免高刷鼠标每秒数百次事件重复触发调度。
+      if(!raf) wake();
     }
     function onLeave(){ pointer.inside=false;pointer.time=0;wake(); }
     function onOut(event){ if(!event.relatedTarget) onLeave(); }
