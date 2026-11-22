@@ -748,6 +748,42 @@ pre.json,pre.curl{background:rgba(255,255,255,.02)!important;box-shadow:inset 0 
 .ov-strip .ov-card:nth-child(5){display:none!important}
 .grid{grid-template-columns:repeat(3,1fr)!important}
 .grid .stat:nth-child(4){display:none!important}
+/* LIGHT-THEME-ENABLE · 上面的极简覆盖把所有主题都锁成纯黑，
+   这里给浅色模式单独一组高优先级规则，让「深浅色切换」真正生效；夜间外观保持原样。 */
+html[data-theme="light"]{
+  --ink:#1d1d1f!important;--ink-2:#424245!important;--muted:#6e6e73!important;--faint:#86868b!important;
+  --line:rgba(0,0,0,.09)!important;--line-soft:rgba(0,0,0,.055)!important;
+  --bg:#f5f5f7!important;--card:#ffffff!important;--side-bg:#ffffff!important;--pop-bg:#ffffff!important;
+  --accent:#0071e3!important;--accent-ink:#0058b0!important;--accent-soft:rgba(0,113,227,.10)!important;
+  --accent-faint:rgba(0,113,227,.055)!important;--on-accent:#ffffff!important;
+  --fill-0:rgba(0,0,0,.018)!important;--fill-1:rgba(0,0,0,.04)!important;
+  --fill-2:rgba(0,0,0,.05)!important;--fill-3:rgba(0,0,0,.055)!important;--fill-4:rgba(0,0,0,.09)!important;
+  --grid-line:rgba(0,0,0,.04)!important;
+}
+html,html[data-theme="light"] body{background:#f5f5f7!important}
+html[data-theme="light"] .side{background:#ffffff!important;border-right-color:rgba(0,0,0,.07)!important}
+html[data-theme="light"] .stat,html[data-theme="light"] .panel,html[data-theme="light"] .ov-card,
+html[data-theme="light"] .guide,html[data-theme="light"] .check-card,html[data-theme="light"] .preview-strip,
+html[data-theme="light"] .json-card,html[data-theme="light"] .health-hero{border-bottom-color:rgba(0,0,0,.08)!important}
+html[data-theme="light"] .stat:hover,html[data-theme="light"] .panel:hover{border-bottom-color:rgba(0,0,0,.2)!important}
+html[data-theme="light"] .stat .num{color:#1d1d1f!important}
+html[data-theme="light"] .stat .label span{box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)!important;color:#424245!important}
+html[data-theme="light"] .side .nav a.on,html[data-theme="light"] .source-tabs a.on,
+html[data-theme="light"] .tp-seg button.on{background:#1d1d1f!important;color:#ffffff!important}
+html[data-theme="light"] .chart .bar{background:#8a8a93!important}
+html[data-theme="light"] .chart .bar.today,html[data-theme="light"] .chart-legend .today i{background:#1d1d1f!important}
+html[data-theme="light"] .chart-legend i{background:#8a8a93!important}
+html[data-theme="light"] .pill,html[data-theme="light"] .ep-method,html[data-theme="light"] .ref-tag.ok,
+html[data-theme="light"] .ref-tag.info,html[data-theme="light"] .ref-tag.violet,html[data-theme="light"] .hr-tag,
+html[data-theme="light"] .ep-tag,html[data-theme="light"] .mini-btn.primary{background:rgba(0,0,0,.05)!important;color:#424245!important}
+html[data-theme="light"] .notice{background:rgba(0,0,0,.035)!important}
+html[data-theme="light"] .notice svg{color:#86868b!important}
+html[data-theme="light"] .btn:not(.ghost){background:#1d1d1f!important;color:#ffffff!important}
+html[data-theme="light"] .btn.ghost{box-shadow:inset 0 0 0 1px rgba(0,0,0,.16)!important}
+html[data-theme="light"] .logo-mark{color:#1d1d1f!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28)!important}
+html[data-theme="light"] .badge i,html[data-theme="light"] .side-foot .live i{background:#86868b!important}
+html[data-theme="light"] pre.json,html[data-theme="light"] pre.curl{background:rgba(0,0,0,.02)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)!important}
+html[data-theme="light"] #dotgrid-bg{opacity:.5!important}
 </style>
 
 
@@ -823,7 +859,7 @@ body.side-collapsed .main{padding-left:72px}
     window.__dotGridBooted = true;
     var reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     var S = {
-      dotSize:5, gap:18, baseColor:'#201e28', activeColor:'#ffffff',
+      dotSize:5, gap:34, baseColor:'#201e28', activeColor:'#ffffff',
       proximity:120, strength:0.7, bounce:0.6, tension:0.4,
       returnDuration:0.8, shockRadius:320, shockStrength:5,
       swell:0.8, stretch:0.32, glow:0.4, shape:'circle', fade:0,
@@ -949,7 +985,7 @@ void main(){
     }
     function resize(){
       var rect=canvas.getBoundingClientRect();
-      var ratio=Math.min(S.dpr||window.devicePixelRatio||1,2);
+      var ratio=Math.min(S.dpr||window.devicePixelRatio||1,1.5);
       var w=Math.max(1,Math.round(rect.width)),h=Math.max(1,Math.round(rect.height));
       view.width=w;view.height=h;view.left=rect.left;view.top=rect.top;view.ratio=ratio;
       canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
@@ -973,7 +1009,7 @@ void main(){
       var coupling=(Math.max(0,S.tension)*900)**2/(grid.cell*grid.cell);
       var viscosity=Math.sqrt(coupling)*0.06;
       var limit=Math.sqrt(stiffness+8*coupling)+damping+8*viscosity;
-      var steps=Math.min(24,Math.max(1,Math.ceil(dt/Math.min(1/120,1.2/limit))));
+      var steps=Math.min(8,Math.max(1,Math.ceil(dt/Math.min(1/120,1.2/limit))));
       var h=dt/steps;
       for(var i=0;i<grid.count;i++){
         var index=i*2, rx=rest[index], ry=rest[index+1], ax=0, ay=0;
@@ -1113,7 +1149,10 @@ void main(){
         pointer.vx+=(vx-pointer.vx)*0.6;pointer.vy+=(vy-pointer.vy)*0.6;
       }else{ pointer.vx=0;pointer.vy=0; }
       pointer.x=x;pointer.y=y;pointer.time=time;
-      if(inside!==pointer.inside||inside){ pointer.inside=inside;wake(); }
+      pointer.inside=inside;
+      // 只在渲染循环休眠时唤醒；活跃帧里 pointermove 仅更新坐标，
+      // 由 frame() 自己续帧，避免高刷鼠标每秒数百次事件重复触发调度。
+      if(!raf) wake();
     }
     function onLeave(){ pointer.inside=false;pointer.time=0;wake(); }
     function onOut(event){ if(!event.relatedTarget) onLeave(); }
@@ -1230,20 +1269,21 @@ body.topnav-mode .main{padding-top:88px!important}
       setup:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'
     };
     var ITEMS=[
-      {key:'online',path:'#overview',label:'网站总览'},
-      {key:'monitor',path:'#visitors',label:'访客详情'},
-      {key:'dashboard',path:'#local',label:'本地数据'},
-      {key:'api',path:'#api',label:'数据接口'},
-      {key:'health',path:'#health',label:'运行状况'},
-      {key:'setup',path:'#setup',label:'数据设置'}
+      {key:'online',path:'/online',label:'网站总览'},
+      {key:'monitor',path:'/monitor',label:'访客详情'},
+      {key:'dashboard',path:'/dashboard',label:'本地数据'},
+      {key:'api',path:'/api-explorer',label:'数据接口'},
+      {key:'health',path:'/health',label:'运行状况'},
+      {key:'setup',path:'/setup',label:'数据设置'}
     ];
-    var sc='';
-    function href(p){ return p; }
-    var active='#overview';
+    var sc=(new URLSearchParams(location.search).get('sharecode')||'').trim();
+    function href(p){ return p+(sc?('?sharecode='+encodeURIComponent(sc)):''); }
+    var path=(location.pathname||'/online').replace(/\/+$/,'')||'/online';
+    var active=(path==='/'?'/online':path);
 
     var nav=document.createElement('div');
     nav.id='topNav';
-    var brand='<a class="tn-brand" href="#overview"><span class="tn-logo">P</span><span class="tn-name">我的网站</span></a>';
+    var brand='<a class="tn-brand" href="'+href('/online')+'"><span class="tn-logo">P</span><span class="tn-name">我的网站</span></a>';
     var links='';
     ITEMS.forEach(function(it){
       var on=(it.path===active)?' on':'';
@@ -1456,6 +1496,70 @@ body.targetcursor-on *{cursor:none!important}
 @media(prefers-reduced-motion:reduce){
   .scroll-float-band__title .sf-char{opacity:1;transform:none;transition:none}
 }
+/* 异常提醒 */
+.alerts{display:flex;flex-direction:column;gap:8px;margin:0 0 16px}
+.alert{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:var(--amber-soft);color:var(--ink-2);font-size:12.5px}
+.alert svg{flex:0 0 auto;width:16px;height:16px}
+.alert b{font-weight:650;margin-right:6px;color:var(--ink)}
+.alert span{color:var(--muted)}
+.alert a{margin-left:auto;white-space:nowrap;color:var(--accent);text-decoration:none;font-weight:600}
+.alert.bad{background:var(--danger-soft);color:var(--danger-ink)}
+.alert.bad b{color:var(--danger-ink-strong)}
+/* 数据工具条 */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 18px;font-size:11.5px;color:var(--faint)}
+.btn.sm{height:34px!important;min-width:0!important;padding:0 14px!important;font-size:12px!important;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.tb-actions{display:flex;align-items:center;justify-content:center;gap:8px}
+/* 趋势范围切换 */
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--fill-2);gap:2px;flex:0 0 auto;margin:0 0 18px}
+.seg button{border:0;background:transparent;color:var(--muted);font-size:11.5px;padding:5px 11px;border-radius:999px;cursor:pointer;font-weight:550;font-family:inherit}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.chart[hidden]{display:none!important}
+.chart[data-chart="30"]{overflow-x:auto}
+.chart[data-chart="30"] .bar-col{min-width:15px}
+.chart[data-chart="30"] .bar-col .v,.chart[data-chart="30"] .bar-col .x{font-size:9px}
+/* 设备分布 */
+.devices{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;gap:9px}
+.device-row{display:flex;align-items:center;gap:10px;font-size:11.5px}
+.device-row .dl{min-width:34px;color:var(--ink-2)}
+.device-row .dbar{flex:1;height:6px;border-radius:99px;background:var(--fill-2);overflow:hidden}
+.device-row .dbar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.device-row .dc{min-width:30px;text-align:right;color:var(--muted)}
+/* 星期热力：7 列小方块，颜色深浅代表那天流量 */
+.week{margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft)}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.week-cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+.week-box{
+  width:100%;height:34px;border-radius:8px;background:var(--fill-2);
+  position:relative;overflow:hidden;
+}
+.week-box i{position:absolute;inset:0;background:var(--accent);opacity:0}
+.week-box b{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--ink);
+}
+.week-cell .wl{font-size:10px;color:var(--faint)}
+/* 分享卡片：扫码打开作品集 */
+.share-mask{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.share-mask[hidden]{display:none}
+.share-card{width:min(360px,100%);background:var(--card);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.45);padding:26px 24px 22px;text-align:center;position:relative;animation:pop .22s ease}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.share-card .sc-close{position:absolute;top:12px;right:14px;border:0;background:transparent;color:var(--faint);font-size:22px;line-height:1;cursor:pointer}
+.share-card h3{margin:0 0 4px;font-size:16px;font-weight:650;color:var(--ink)}
+.share-card .sc-sub{margin:0 0 18px;font-size:11.5px;color:var(--muted)}
+.share-qr{display:inline-flex;padding:14px;border-radius:14px;background:#fff;line-height:0}
+.share-qr svg{width:180px;height:180px;display:block}
+.share-qr.empty{width:180px;height:180px;align-items:center;justify-content:center;color:#999;font-size:12px;line-height:1.5}
+.share-url{margin:16px 0 14px;font-size:11px;color:var(--muted);word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.share-acts{display:flex;gap:8px}
+.share-acts .btn{flex:1;height:38px;font-size:12.5px}
+@media(max-width:720px){
+  .toolbar{flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .seg{align-self:center}
+  .week-grid{gap:3px}
+  .week-box{height:28px}
+  .week-cell .wl{font-size:9px}
+}
 </style>
 </head>
 <body>
@@ -1488,8 +1592,9 @@ body.targetcursor-on *{cursor:none!important}
     <div class="crumb">我的网站 · 访问情况</div>
     <div class="top-actions">
       <div class="badge "><i></i>数据正常</div>
-      <button class="btn ghost" onclick="location.reload()">刷新</button>
-      <button class="btn" id="openSite">打开网站</button>
+      <button class="btn ghost" id="quickTheme" type="button" title="切换深浅色">深浅色</button>
+      <span class="btn ghost" style="cursor:default">静态快照</span>
+      <button class="btn" id="openSite">分享网站</button>
     </div>
   </header>
 
@@ -1502,26 +1607,26 @@ body.targetcursor-on *{cursor:none!important}
     <a href="#setup">数据设置</a>
   </div>
 
-  <section class="scroll-float-band" aria-label="React Bits">
-    <div class="scroll-float-band__hint">SCROLL TO REVEAL</div>
-    <h2 class="scroll-float-band__title" data-scroll-float>React Bits</h2>
+  <section id="overview" class="scroll-float-band" aria-label="网站总览">
+    <div class="scroll-float-band__hint">数据来自真实的浏览器访问</div>
+    <h2 class="scroll-float-band__title" data-scroll-float>网站总览</h2>
   </section>
 
   <!-- 入口与安全概览：只有聚合数字，不含 IP / UA 明细；明细在受密码保护的 /monitor -->
   <section class="ov-strip">
     <div class="ov-card">
       <div class="k">总访问</div>
-      <div class="v">243</div>
+      <div class="v">285</div>
       <div class="s">所有打开都算</div>
     </div>
     <div class="ov-card">
       <div class="k">真人来了</div>
-      <div class="v">112</div>
+      <div class="v">111</div>
       <div class="s">大多是直接访问</div>
     </div>
     <div class="ov-card">
       <div class="k">机器人</div>
-      <div class="v">125</div>
+      <div class="v">169</div>
       <div class="s">搜索引擎之类的</div>
     </div>
     <div class="ov-card">
@@ -1530,7 +1635,7 @@ body.targetcursor-on *{cursor:none!important}
       <div class="s">没发现攻击</div>
     </div>
     <div class="ov-card">
-      <div class="k">当前版本 <a href="/monitor#releases">迭代 →</a></div>
+      <div class="k">当前版本 <a href="#visitors">迭代 →</a></div>
       <div class="v small">v2026.11.15.3</div>
       <div class="s">登记于 2026/11/16</div>
     </div>
@@ -1542,20 +1647,38 @@ body.targetcursor-on *{cursor:none!important}
     <div>这里是真实访问记录，不是编的；数据可能有几分钟延迟。</div>
   </div>
 
+  
+  <div class="alerts">
+    
+    <div class="alert bad">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <div><b>访问量突然变少了</b><span>昨天 10 次，前面 6 天平均 25 次，少了 60%</span></div>
+      
+    </div>
+    
+  </div>
+  
+
+  <div class="toolbar">
+    <span>数据快照 21:30 · 来自 Cloudflare（实时数据请打开在线监测台）</span>
+    <div class="tb-actions">
+    </div>
+  </div>
+
   <section class="grid">
     <div class="stat">
       <div class="label">最近30天浏览 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span></div>
-      <div class="num mono">240</div>
+      <div class="num mono">260</div>
       <div class="sub">页面被看了几次</div>
     </div>
     <div class="stat">
       <div class="label">最近30天来访 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span></div>
-      <div class="num mono">240</div>
+      <div class="num mono">260</div>
       <div class="sub">来了几拨人</div>
     </div>
     <div class="stat">
       <div class="label">今天浏览 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></div>
-      <div class="num mono">20</div>
+      <div class="num mono">40</div>
       <div class="sub">从0点算起</div>
     </div>
     <div class="stat">
@@ -1566,10 +1689,16 @@ body.targetcursor-on *{cursor:none!important}
   </section>
 
   <section class="panels">
-    <div class="panel">
-      <h2>最近7天访问量</h2>
+    <div class="panel" id="local">
+      <h2>访问量</h2>
       <div class="desc">看看每天来了多少人</div>
-      <div class="chart">
+      <div class="seg" role="group" aria-label="选择时间范围">
+        <button type="button" class="on" data-range="7">最近7天</button>
+        <button type="button" data-range="30">最近30天</button>
+      </div>
+      
+      
+      <div class="chart" data-chart="7">
         
         
         <div class="bar-col">
@@ -1609,19 +1738,253 @@ body.targetcursor-on *{cursor:none!important}
         </div>
         
         <div class="bar-col">
-          <div class="v">20</div>
-          <div class="bar-track"><div class="bar today" style="height:44%"></div></div>
+          <div class="v">40</div>
+          <div class="bar-track"><div class="bar today" style="height:88%"></div></div>
           <div class="x">11/22</div>
         </div>
         
         
       </div>
       
-      <div class="chart-legend">
+      
+      <div class="chart" data-chart="30" hidden>
         
-        <span><i></i>每天平均 <b>19</b> 次</span>
-        <span class="today"><i></i>今天 <b>20</b> 次</span>
-        <span>最多的一天 <b>40</b> 次</span>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">24</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">27</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">30</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">02</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">05</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">08</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x">11</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">20</div>
+          <div class="bar-track"><div class="bar " style="height:35.2%"></div></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">40</div>
+          <div class="bar-track"><div class="bar " style="height:70.4%"></div></div>
+          <div class="x">14</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">50</div>
+          <div class="bar-track"><div class="bar " style="height:88%"></div></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">40</div>
+          <div class="bar-track"><div class="bar " style="height:70.4%"></div></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">20</div>
+          <div class="bar-track"><div class="bar " style="height:35.2%"></div></div>
+          <div class="x">17</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">0</div>
+          <div class="bar-track"></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">40</div>
+          <div class="bar-track"><div class="bar " style="height:70.4%"></div></div>
+          <div class="x">20</div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">10</div>
+          <div class="bar-track"><div class="bar " style="height:17.6%"></div></div>
+          <div class="x"></div>
+        </div>
+        
+        <div class="bar-col">
+          <div class="v">40</div>
+          <div class="bar-track"><div class="bar today" style="height:70.4%"></div></div>
+          <div class="x">22</div>
+        </div>
+        
+        
+      </div>
+      
+      
+      <div class="chart-legend" id="chartLegend"
+        data-avg7="21"
+        data-peak7="40"
+        data-avg30="9"
+        data-peak30="50">
+        <span><i></i>每天平均 <b id="legAvg">—</b> 次</span>
+        <span class="today"><i></i>今天 <b>40</b> 次</span>
+        <span>最多的一天 <b id="legPeak">—</b> 次</span>
+      </div>
+      
+      
+      <div class="week">
+        <div class="desc" style="margin:0 0 10px">近 30 天里，周几来看的人多（颜色越深越多）</div>
+        <div class="week-grid">
+          
+          <div class="week-cell" title="周一：共 40 次浏览">
+            <div class="week-box"><i style="opacity:0.51"></i><b>40</b></div>
+            <span class="wl">周一</span>
+          </div>
+          
+          <div class="week-cell" title="周二：共 20 次浏览">
+            <div class="week-box"><i style="opacity:0.32"></i><b>20</b></div>
+            <span class="wl">周二</span>
+          </div>
+          
+          <div class="week-cell" title="周三：共 0 次浏览">
+            <div class="week-box"><i style="opacity:0"></i><b>0</b></div>
+            <span class="wl">周三</span>
+          </div>
+          
+          <div class="week-cell" title="周四：共 0 次浏览">
+            <div class="week-box"><i style="opacity:0"></i><b>0</b></div>
+            <span class="wl">周四</span>
+          </div>
+          
+          <div class="week-cell" title="周五：共 60 次浏览">
+            <div class="week-box"><i style="opacity:0.71"></i><b>60</b></div>
+            <span class="wl">周五</span>
+          </div>
+          
+          <div class="week-cell" title="周六：共 50 次浏览">
+            <div class="week-box"><i style="opacity:0.61"></i><b>50</b></div>
+            <span class="wl">周六</span>
+          </div>
+          
+          <div class="week-cell" title="周日：共 90 次浏览">
+            <div class="week-box"><i style="opacity:1.00"></i><b>90</b></div>
+            <span class="wl">周日</span>
+          </div>
+          
+        </div>
       </div>
       
     </div>
@@ -1630,12 +1993,30 @@ body.targetcursor-on *{cursor:none!important}
       <div class="desc">一些基本情况</div>
       <div class="kv"><span>网站地址</span><code>haiyanhou816-afk.github.io</code></div>
       
-      <div class="kv" style="margin-top:8px"><span>访客主要来自</span><b>直接访问 · 65 次</b></div>
+      <div class="kv" style="margin-top:8px"><span>访客主要来自</span><b>直接访问 · 68 次</b></div>
+      
+      
+      <div class="devices">
+        
+        
+        <div class="device-row">
+          <span class="dl">电脑</span>
+          <span class="dbar"><i style="width:50.5%"></i></span>
+          <span class="dc mono">47</span>
+        </div>
+        
+        <div class="device-row">
+          <span class="dl">手机</span>
+          <span class="dbar"><i style="width:49.5%"></i></span>
+          <span class="dc mono">46</span>
+        </div>
+        
+      </div>
       
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="visitors">
     <h2>大家爱看的页面</h2>
     <div class="desc">最近7天看得最多的</div>
     <div class="table-wrap"><table class="table">
@@ -1645,20 +2026,20 @@ body.targetcursor-on *{cursor:none!important}
         
         <tr>
           <td class="mono p" title="/portfolio/">/portfolio/</td>
-          <td class="mono">75</td>
-          <td class="mono">57.7%</td>
+          <td class="mono">79</td>
+          <td class="mono">52.7%</td>
         </tr>
         
         <tr>
           <td class="mono p" title="/portfolio/assets/index-Dj3b8x49.js">/portfolio/assets/index-Dj3b8x49.js</td>
           <td class="mono">2</td>
-          <td class="mono">1.5%</td>
+          <td class="mono">1.3%</td>
         </tr>
         
         <tr>
-          <td class="mono p" title="/portfolio/%20https://xhslink.com/o/2Fe0wESQp5F">/portfolio/%20https://xhslink.com/o/2Fe0wESQp5F</td>
+          <td class="mono p" title="/portfolio/assets/index-Sky9eTQu.js">/portfolio/assets/index-Sky9eTQu.js</td>
           <td class="mono">1</td>
-          <td class="mono">0.8%</td>
+          <td class="mono">0.7%</td>
         </tr>
         
         
@@ -1667,7 +2048,7 @@ body.targetcursor-on *{cursor:none!important}
     <div class="foot"><span>数据都是真实的，没有编造</span></div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="api">
     <h2>访客从哪来</h2>
     <div class="desc">看看大家是怎么找到你的</div>
     
@@ -1675,7 +2056,7 @@ body.targetcursor-on *{cursor:none!important}
     <div class="ref-row">
       <span class="ref-tag muted">直接访问</span>
       <span class="host mono">直接访问</span>
-      <span class="cnt mono">65 次</span>
+      <span class="cnt mono">68 次</span>
     </div>
     
     <div class="ref-row">
@@ -1687,7 +2068,7 @@ body.targetcursor-on *{cursor:none!important}
     <div class="ref-row">
       <span class="ref-tag ok">外部链接</span>
       <span class="host mono">portfolio-admin-15620.app.workbuddy.host</span>
-      <span class="cnt mono">5 次</span>
+      <span class="cnt mono">7 次</span>
     </div>
     
     <div class="ref-row">
@@ -1700,7 +2081,26 @@ body.targetcursor-on *{cursor:none!important}
     
   </section>
   
+<span id="health"></span><span id="setup"></span>
 </main>
+
+<!-- 分享卡片：扫码打开作品集 -->
+<div class="share-mask" id="shareMask" hidden>
+  <div class="share-card" role="dialog" aria-modal="true" aria-label="分享作品集">
+    <button class="sc-close" id="shareClose" type="button" aria-label="关闭">×</button>
+    <h3>扫码打开作品集</h3>
+    <p class="sc-sub">手机扫一扫，或复制地址发给朋友</p>
+    
+    <div class="share-qr"><svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 35 35" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h35v35H0z"/><path stroke="#111114" d="M1 1.5h7m1 0h1m3 0h2m3 0h2m3 0h1m3 0h7M1 2.5h1m5 0h1m1 0h7m3 0h2m1 0h2m3 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h2m3 0h4m2 0h3m2 0h1m1 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m5 0h1m1 0h3m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h1m1 0h3m2 0h3m6 0h1m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m2 0h1m1 0h1m2 0h6m1 0h1m1 0h1m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 8.5h1m2 0h2m1 0h2m6 0h1M1 9.5h1m2 0h9m2 0h1m1 0h2m5 0h3m2 0h1m1 0h3M1 10.5h2m1 0h1m4 0h3m2 0h3m1 0h7m4 0h3M2 11.5h1m4 0h1m1 0h1m1 0h1m2 0h1m1 0h1m4 0h1m1 0h2m1 0h2m1 0h5M1 12.5h2m2 0h2m1 0h2m1 0h2m1 0h1m4 0h7m2 0h1m2 0h2M2 13.5h1m1 0h1m1 0h4m3 0h2m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m4 0h1M1 14.5h3m5 0h2m1 0h4m3 0h4m1 0h1m1 0h1m1 0h1m1 0h1M5 15.5h4m2 0h1m1 0h2m1 0h1m1 0h1m1 0h4m3 0h2m1 0h1M3 16.5h2m4 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1M1 17.5h2m2 0h3m2 0h1m1 0h1m2 0h3m5 0h1m2 0h5M1 18.5h2m9 0h2m2 0h1m1 0h3m2 0h1m3 0h1m1 0h1m1 0h1m1 0h1M1 19.5h1m1 0h2m2 0h2m1 0h1m3 0h3m1 0h3m1 0h3m2 0h2m1 0h2m1 0h1M1 20.5h1m1 0h3m4 0h2m3 0h1m4 0h2m1 0h1m1 0h2m2 0h4M1 21.5h3m3 0h4m2 0h1m3 0h1m1 0h2m1 0h4m4 0h1m2 0h1M1 22.5h1m1 0h3m3 0h2m3 0h1m3 0h1m3 0h1m1 0h1m3 0h3M1 23.5h1m1 0h1m1 0h4m1 0h2m2 0h1m4 0h3m1 0h3m3 0h1m2 0h2M1 24.5h1m2 0h1m4 0h3m1 0h4m1 0h1m1 0h2m2 0h1m3 0h1m2 0h2M1 25.5h7m2 0h2m2 0h1m2 0h1m1 0h1m5 0h5M9 26.5h1m4 0h6m1 0h3m1 0h1m3 0h1m1 0h2M1 27.5h7m1 0h4m2 0h2m1 0h1m1 0h1m3 0h2m1 0h1m1 0h1m1 0h2M1 28.5h1m5 0h1m1 0h3m3 0h2m1 0h2m1 0h5m3 0h3M1 29.5h1m1 0h3m1 0h1m1 0h1m3 0h1m2 0h3m1 0h1m1 0h8m3 0h1M1 30.5h1m1 0h3m1 0h1m1 0h2m1 0h2m1 0h1m1 0h1m1 0h1m3 0h1m1 0h2m1 0h1m1 0h2m1 0h1M1 31.5h1m1 0h3m1 0h1m2 0h1m3 0h1m1 0h1m3 0h1m1 0h1m1 0h3m1 0h6M1 32.5h1m5 0h1m3 0h4m4 0h3m1 0h1m4 0h6M1 33.5h7m1 0h4m3 0h3m1 0h2m1 0h3m1 0h3"/></svg>
+</div>
+    
+    <div class="share-url">https://haiyanhou816-afk.github.io/portfolio/</div>
+    <div class="share-acts">
+      <button class="btn ghost" id="copyUrl" type="button">复制地址</button>
+      <button class="btn" id="goSite" type="button">直接打开</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ScrollFloat: split into chars and float them up when the band enters view */
@@ -1739,9 +2139,85 @@ body.targetcursor-on *{cursor:none!important}
   io.observe(band);
 })();
 
-document.getElementById('openSite').addEventListener('click', function(){
-  window.open("https://haiyanhou816-afk.github.io/portfolio/", '_blank');
-});
+/* 趋势图 7 / 30 天切换：两组柱子都在 DOM 里，只切显示，不重新请求数据 */
+(function(){
+  var buttons = document.querySelectorAll('.seg button');
+  var legend = document.getElementById('chartLegend');
+  if (!buttons.length) return;
+  function apply(range){
+    document.querySelectorAll('[data-chart]').forEach(function(c){
+      c.hidden = c.getAttribute('data-chart') !== range;
+    });
+    if (legend) {
+      var avg = document.getElementById('legAvg');
+      var peak = document.getElementById('legPeak');
+      if (avg) avg.textContent = legend.getAttribute('data-avg' + range);
+      if (peak) peak.textContent = legend.getAttribute('data-peak' + range);
+    }
+  }
+  buttons.forEach(function(b){
+    b.addEventListener('click', function(){
+      buttons.forEach(function(x){ x.classList.toggle('on', x === b); });
+      apply(b.getAttribute('data-range'));
+    });
+  });
+  apply('7');
+})();
+
+/* 分享卡片：点「分享网站」弹出二维码，支持复制地址 / 直接打开 / 点遮罩关闭 */
+(function(){
+  var SITE_URL = "https://haiyanhou816-afk.github.io/portfolio/";
+  var mask = document.getElementById('shareMask');
+  var openBtn = document.getElementById('openSite');
+  if(!mask || !openBtn) return;
+  function close(){ mask.hidden = true; }
+  openBtn.addEventListener('click', function(){ mask.hidden = false; });
+  document.getElementById('shareClose').addEventListener('click', close);
+  mask.addEventListener('click', function(e){ if(e.target === mask) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+  document.getElementById('goSite').addEventListener('click', function(){ window.open(SITE_URL, '_blank'); });
+  document.getElementById('copyUrl').addEventListener('click', function(){
+    var btn = document.getElementById('copyUrl');
+    function done(){ btn.textContent = '已复制 ✓'; setTimeout(function(){ btn.textContent = '复制地址'; }, 1600); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(SITE_URL).then(done, fallback);
+    } else fallback();
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = SITE_URL; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent = '复制失败'; }
+      document.body.removeChild(ta);
+    }
+  });
+})();
+
+/* 深浅色快速切换：复用页面内置的外观引擎 PortfolioTheme，点一下在日间/夜间之间切换 */
+(function(){
+  var b = document.getElementById('quickTheme');
+  if(!b) return;
+  b.addEventListener('click', function(){
+    var T = window.PortfolioTheme;
+    if(!T){ location.reload(); return; }
+    T.set({ mode: T.dark ? 'light' : 'night' });
+  });
+})();
+
+/* 刷新按钮：带上当前 sharecode 与 refresh=1，强制后端绕过缓存重新拉取；
+   刷新中禁用按钮，避免连点。 */
+(function(){
+  var b=document.getElementById('refreshBtn');
+  if(!b) return;
+  var sc=(new URLSearchParams(location.search).get('sharecode')||'').trim();
+  var q='refresh=1'+(sc?('&sharecode='+encodeURIComponent(sc)):'');
+  b.setAttribute('href', location.pathname+'?'+q);
+  b.addEventListener('click', function(){
+    if(b.dataset.busy) return false;
+    b.dataset.busy='1';
+    b.textContent='刷新中…';
+    b.style.opacity='.6';
+  });
+})();
 </script>
 <!-- 外观设置：日间 / 夜晚 / 自动 + 夜间底色 + 深度 + 强调色，两个页面共用 -->
 <div class="theme-ctrl" id="themeCtrl">
