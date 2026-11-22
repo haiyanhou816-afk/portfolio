@@ -217,6 +217,7 @@ export default function About({ lang }) {
               <AvatarSpotlight
                 src={asset("/avatar.jpg")}
                 alt={z ? "侯海岩的照片" : "Portrait of Hou Haiyan"}
+                lang={lang}
               />
             </motion.div>
           </div>
