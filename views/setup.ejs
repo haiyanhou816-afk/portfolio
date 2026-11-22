@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f5f5f7">
-<title>数据源配置 · Portfolio Admin</title>
+<title>数据设置 · Portfolio Admin</title>
 <%- include('theme-boot') %>
 <%- include('admin-style') %>
 </head>
@@ -17,15 +17,15 @@
   </div>
   <div class="nav-label">监测</div>
   <nav class="nav">
-    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
-    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
-    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
-    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>网站总览</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>访客详情</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地数据</a>
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>数据接口</a>
   </nav>
   <div class="nav-label">系统</div>
   <nav class="nav">
-    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
-    <a class="on" href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-2.9 1.2v.2h-4v-.2a1.7 1.7 0 00-2.9-1.2l-.1.1-2.8-2.8.1-.1A1.7 1.7 0 003 15H2.8v-4H3a1.7 1.7 0 001.2-2.9l-.1-.1 2.8-2.8.1.1A1.7 1.7 0 0010 4.2V4h4v.2a1.7 1.7 0 002.9 1.2l.1-.1 2.8 2.8-.1.1A1.7 1.7 0 0021 11h.2v4H21a1.7 1.7 0 00-1.6 0z"/></svg>数据源配置</a>
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>运行状况</a>
+    <a class="on" href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-2.9 1.2v.2h-4v-.2a1.7 1.7 0 00-2.9-1.2l-.1.1-2.8-2.8.1-.1A1.7 1.7 0 003 15H2.8v-4H3a1.7 1.7 0 001.2-2.9l-.1-.1 2.8-2.8.1.1A1.7 1.7 0 0010 4.2V4h4v.2a1.7 1.7 0 002.9 1.2l.1-.1 2.8 2.8-.1.1A1.7 1.7 0 0021 11h.2v4H21a1.7 1.7 0 00-1.6 0z"/></svg>数据设置</a>
   </nav>
   <div class="side-foot">
     <div class="live"><i></i>服务运行中</div>
@@ -35,7 +35,7 @@
 
 <main class="main">
   <header class="top">
-    <div class="crumb">系统 / <b>数据源配置</b></div>
+    <div class="crumb">我的网站 / <b>数据设置</b></div>
     <div class="top-actions">
       <div class="badge <%= status.configured ? '' : 'warn' %>"><i></i><%= status.configured ? '凭证齐备' : '等待配置' %></div>
       <button class="btn ghost" onclick="location.href='/online'">查看引导</button>
@@ -44,17 +44,17 @@
   </header>
 
   <div class="source-tabs">
-    <a href="/online">线上站点 · Cloudflare</a>
-    <a href="/monitor">入口与安全</a>
-    <a href="/dashboard">本地预览 · 埋点</a>
-    <a href="/health">健康检查</a>
-    <a href="/api-explorer">API 数据</a>
-    <a class="on" href="/setup">数据源配置</a>
+    <a href="/online">网站总览</a>
+    <a href="/monitor">访客详情</a>
+    <a href="/dashboard">本地数据</a>
+    <a href="/api-explorer">数据接口</a>
+    <a href="/health">运行状况</a>
+    <a class="on" href="/setup">数据设置</a>
   </div>
 
   <div class="notice">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-    <div><b>在这里直接填写 Cloudflare 凭证，线上站点即刻接通真实数据。</b> 凭证只保存在服务器侧的 <code>data/config.json</code>，页面从不回显 token 明文；未配齐时线上监测页不会显示任何模拟数字。详细获取步骤见 <a href="/online" style="color:var(--accent);text-decoration:none">线上站点的四步引导</a>。</div>
+    <div><b>在这里直接填写 Cloudflare 凭证，网站总览即刻接通真实数据。</b> 凭证只保存在服务器侧的 <code>data/config.json</code>，页面从不回显 token 明文；未配齐时线上监测页不会显示任何模拟数字。详细获取步骤见 <a href="/online" style="color:var(--accent);text-decoration:none">网站总览的四步引导</a>。</div>
   </div>
 
   <div class="setup">
@@ -81,7 +81,7 @@
             <input id="CF_HOST" name="CF_HOST" type="text" value="<%= status.host %>" autocomplete="off">
           </div>
           <div class="form-field">
-            <label for="PORTFOLIO_URL">作品集站点地址 · 后台「打开线上站点」按钮跳转到这里（需含子路径）</label>
+            <label for="PORTFOLIO_URL">作品集站点地址 · 后台「打开网站」按钮跳转到这里（需含子路径）</label>
             <input id="PORTFOLIO_URL" name="PORTFOLIO_URL" type="text" value="<%= status.portfolioUrl %>" autocomplete="off">
             <div class="hint" style="margin-top:6px">与监测主机名分开配置：主机名只用于 Cloudflare 过滤，站点地址必须是浏览器能直接打开的完整 URL。</div>
           </div>

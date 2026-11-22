@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f5f5f7">
-<title>线上站点监测 · Portfolio Admin</title>
+<title>网站总览 · Portfolio Admin</title>
 <%- include('theme-boot') %>
 <%- include('admin-style') %>
 <style>
@@ -24,6 +24,52 @@
 .ref-tag.ok,.ref-tag.info,.ref-tag.violet{background:var(--accent-soft);color:var(--accent-ink)}
 .ref-tag.amber{background:var(--amber-soft);color:var(--ink-2)}
 @media(max-width:1100px){.ov-strip{grid-template-columns:repeat(2,1fr)}}
+/* 参考图里的胶囊按钮：白色主按钮 + 深色次按钮 */
+#openSite{
+  height:46px!important;min-width:158px;padding:0 24px!important;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  border-radius:999px!important;background:#f5f5f5!important;color:#08080a!important;
+  font-size:14px!important;font-weight:650!important;letter-spacing:.01em;
+  box-shadow:0 8px 22px rgba(0,0,0,.28)!important;
+  transition:background .2s ease,transform .2s ease!important;
+}
+#openSite::after{content:"→";font-size:18px;line-height:1;font-weight:400;opacity:.9}
+#openSite:hover{background:#fff!important;transform:translateY(-1px)}
+#openSite:active{transform:translateY(0)}
+.top-actions > .btn.ghost{
+  height:46px!important;min-width:108px;padding:0 22px!important;
+  border-radius:999px!important;background:#151517!important;color:#f4f4f5!important;
+  font-size:14px!important;font-weight:600!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)!important;
+  transition:background .2s ease!important;
+}
+.top-actions > .btn.ghost:hover{background:#1d1d20!important}
+/* ScrollFloat · 大号文字滚动上浮 */
+.scroll-float-band{
+  position:relative;display:grid;place-items:center;min-height:230px;
+  margin:0 0 18px;padding:34px 20px;overflow:hidden;
+  border-bottom:1px solid var(--line-soft);
+}
+.scroll-float-band__hint{
+  position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  color:var(--faint);font-size:10px;letter-spacing:.18em;white-space:nowrap;
+}
+.scroll-float-band__title{
+  margin:0!important;color:var(--ink)!important;
+  font-size:clamp(52px,10vw,132px)!important;font-weight:650!important;
+  letter-spacing:-.055em!important;line-height:1!important;white-space:nowrap;
+  text-align:center;
+}
+.scroll-float-band__title .sf-char{
+  display:inline-block;opacity:0;
+  transform:translateY(120%) scaleY(2.3) scaleX(.62);
+  transform-origin:50% 0;
+  transition:transform 1s cubic-bezier(.68,-.55,.27,1.55),opacity 1s ease;
+}
+.scroll-float-band.is-visible .sf-char{opacity:1;transform:translateY(0) scaleY(1) scaleX(1)}
+@media(prefers-reduced-motion:reduce){
+  .scroll-float-band__title .sf-char{opacity:1;transform:none;transition:none}
+}
 </style>
 </head>
 <body>
@@ -31,66 +77,71 @@
 <aside class="side">
   <div class="logo">
     <div class="logo-mark">P</div>
-    <div><b>Portfolio Admin</b><small>管理后台 · v1.0</small></div>
+    <div><b>我的网站</b></div>
   </div>
   <div class="nav-label">监测</div>
   <nav class="nav">
-    <a class="on" href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
-    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
-    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
-    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+    <a class="on" href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>网站总览</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>访客详情</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地数据</a>
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>数据接口</a>
   </nav>
   <div class="nav-label">系统</div>
   <nav class="nav">
-    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
-    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>运行状况</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据设置</a>
   </nav>
   <div class="side-foot">
-    <div class="live"><i></i>服务运行中</div>
-    端口 <%= port %> · Cloudflare 数据源
+    <div class="live"><i></i>网站正常</div>
+    数据实时同步
   </div>
 </aside>
 
 <main class="main">
   <header class="top">
-    <div class="crumb">监测 / <b><%= stats.host %></b></div>
+    <div class="crumb">我的网站 · 访问情况</div>
     <div class="top-actions">
-      <div class="badge <%= stats.ok ? '' : 'warn' %>"><i></i><%= stats.ok ? 'Cloudflare 已连接' : (stats.configured ? '拉取失败' : '等待配置') %></div>
+      <div class="badge <%= stats.ok ? '' : 'warn' %>"><i></i><%= stats.ok ? '数据正常' : (stats.configured ? '拉取失败' : '等待配置') %></div>
       <button class="btn ghost" onclick="location.reload()">刷新</button>
-      <button class="btn" id="openSite">打开线上站点</button>
+      <button class="btn" id="openSite">打开网站</button>
     </div>
   </header>
 
   <div class="source-tabs">
-    <a class="on" href="/online">线上站点 · Cloudflare</a>
-    <a href="/monitor">入口与安全 · 版本 / 来源 / 爬虫</a>
-    <a href="/dashboard">本地预览 · 埋点</a>
-    <a href="/health">健康检查</a>
-    <a href="/api-explorer">API 数据</a>
-    <a href="/setup">数据源配置</a>
+    <a class="on" href="/online">网站总览</a>
+    <a href="/monitor">访客详情</a>
+    <a href="/dashboard">本地数据</a>
+    <a href="/api-explorer">数据接口</a>
+    <a href="/health">运行状况</a>
+    <a href="/setup">数据设置</a>
   </div>
+
+  <section class="scroll-float-band" aria-label="React Bits">
+    <div class="scroll-float-band__hint">SCROLL TO REVEAL</div>
+    <h2 class="scroll-float-band__title" data-scroll-float>React Bits</h2>
+  </section>
 
   <!-- 入口与安全概览：只有聚合数字，不含 IP / UA 明细；明细在受密码保护的 /monitor -->
   <section class="ov-strip">
     <div class="ov-card">
-      <div class="k">入口请求 <a href="/monitor">明细 →</a></div>
+      <div class="k">总访问</div>
       <div class="v"><%= overview.total %></div>
-      <div class="s">埋点 + 真实 HTTP 请求</div>
+      <div class="s">所有打开都算</div>
     </div>
     <div class="ov-card">
-      <div class="k">真人访客 <a href="/monitor#sources">来源 →</a></div>
+      <div class="k">真人来了</div>
       <div class="v"><%= overview.humans %></div>
-      <div class="s"><%= overview.topChannel ? '主要渠道：' + overview.topChannel.label : '暂无真人访问' %></div>
+      <div class="s"><%= overview.topChannel ? '大多是' + overview.topChannel.label : '暂无真人访问' %></div>
     </div>
     <div class="ov-card">
-      <div class="k">爬虫 / 机器人 <a href="/monitor#threats">标记 →</a></div>
+      <div class="k">机器人</div>
       <div class="v"><%= overview.robots %></div>
-      <div class="s">搜索 / AI / 自动化工具</div>
+      <div class="s">搜索引擎之类的</div>
     </div>
     <div class="ov-card">
-      <div class="k">可疑 / 攻击 <a href="/monitor#threats">标记 →</a></div>
+      <div class="k">可疑访问</div>
       <div class="v <%= overview.threats ? 'bad' : '' %>"><%= overview.threats %></div>
-      <div class="s">其中攻击尝试 <%= overview.attacks %> 次</div>
+      <div class="s"><%= overview.attacks ? '发现 ' + overview.attacks + ' 次攻击' : '没发现攻击' %></div>
     </div>
     <div class="ov-card">
       <div class="k">当前版本 <a href="/monitor#releases">迭代 →</a></div>
@@ -141,7 +192,7 @@
             <div class="step-body">
               <h3>创建只读分析 Token</h3>
               <p><b>Account API tokens</b> → <b>Create Token</b> → Custom token，权限选 <code>Account / Account Analytics / Read</code>，创建后复制填入 <code>CF_API_TOKEN</code>。</p>
-              <p class="hint">在本后台 <a href="/setup" style="color:var(--accent);text-decoration:none">数据源配置</a> 页填写并保存，立即生效；也可写进项目根目录 <code>.env</code>（可从 <code>.env.example</code> 复制）。</p>
+              <p class="hint">在本后台 <a href="/setup" style="color:var(--accent);text-decoration:none">数据设置</a> 页填写并保存，立即生效；也可写进项目根目录 <code>.env</code>（可从 <code>.env.example</code> 复制）。</p>
             </div>
           </div>
         </div>
@@ -186,24 +237,24 @@
   <% } else { %>
   <div class="notice">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-    <div><b>数据来自 Cloudflare Web Analytics 的真实浏览器 beacon，已按 <code><%= stats.host %></code> 过滤。</b> 只统计执行了 JS 的浏览器访问（curl、爬虫、禁 JS 的访客不计入），数据通常有几分钟延迟；结果在本机缓存 60 秒。</div>
+    <div>这里是真实访问记录，不是编的；数据可能有几分钟延迟。</div>
   </div>
 
   <section class="grid">
     <div class="stat">
-      <div class="label">近 30 天浏览量 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span></div>
+      <div class="label">最近30天浏览 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span></div>
       <div class="num mono"><%= stats.total %></div>
-      <div class="sub"><em>真实 PV</em> · 来自 beacon</div>
+      <div class="sub">页面被看了几次</div>
     </div>
     <div class="stat">
-      <div class="label">近 30 天会话 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span></div>
+      <div class="label">最近30天来访 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span></div>
       <div class="num mono"><%= stats.visits %></div>
-      <div class="sub">Cloudflare sum.visits</div>
+      <div class="sub">来了几拨人</div>
     </div>
     <div class="stat">
-      <div class="label">今日浏览量 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg></span></div>
+      <div class="label">今天浏览 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></div>
       <div class="num mono"><%= stats.today %></div>
-      <div class="sub">按 UTC 日期统计</div>
+      <div class="sub">从0点算起</div>
     </div>
     <div class="stat">
       <div class="label">数据源 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/></svg></span></div>
@@ -214,14 +265,14 @@
 
   <section class="panels">
     <div class="panel">
-      <h2>浏览趋势</h2>
-      <div class="desc">最近 7 天真实浏览量 · 近 30 天共 <%= stats.total %> 次</div>
+      <h2>最近7天访问量</h2>
+      <div class="desc">看看每天来了多少人</div>
       <div class="chart<%= stats.total === 0 ? ' is-empty' : '' %>">
         <% if (stats.total === 0) { %>
         <div class="chart-empty">
           <div class="ring"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 5-7 4 4"/></svg></div>
-          <b>还没有浏览数据</b>
-          <span>beacon 开始上报后，这里会显示近 7 天趋势</span>
+          <b>还没有人访问</b>
+          <span>有人访问后，这里会显示最近 7 天的情况</span>
         </div>
         <% } else { %>
         <% stats.days.forEach(function(d, i){ %>
@@ -236,53 +287,47 @@
       <% if (stats.total > 0) { %>
       <div class="chart-legend">
         <% var sum = 0, peak = 0; stats.days.forEach(function(d){ sum += d.count; if (d.count > peak) peak = d.count; }); %>
-        <span><i></i>近 7 日 · 日均 <b><%= (sum / 7).toFixed(1) %></b> 次</span>
-        <span class="today"><i></i>今日 <b><%= stats.today %></b> 次</span>
-        <span>单日峰值 <b><%= peak %></b> 次</span>
+        <span><i></i>每天平均 <b><%= Math.round(sum / 7) %></b> 次</span>
+        <span class="today"><i></i>今天 <b><%= stats.today %></b> 次</span>
+        <span>最多的一天 <b><%= peak %></b> 次</span>
       </div>
       <% } %>
     </div>
     <div class="panel">
-      <h2>数据源信息</h2>
-      <div class="desc">Cloudflare Web Analytics · RUM</div>
-      <div class="kv"><span>监测站点</span><code><%= stats.host %></code></div>
-      <div class="kv"><span>数据集</span><code>rumPageloadEvents</code></div>
-      <div class="kv"><span>过滤维度</span><b>requestHost</b></div>
-      <div class="kv"><span>统计口径</span><b>count / sum.visits</b></div>
-      <div class="kv"><span>缓存</span><b>60 秒</b></div>
-      <div class="kv"><span>最近拉取</span><b class="mono"><%= stats.fetchedAt.toLocaleString('zh-CN', { hour12: false }) %></b></div>
+      <h2>网站信息</h2>
+      <div class="desc">一些基本情况</div>
+      <div class="kv"><span>网站地址</span><code><%= stats.host %></code></div>
       <% if (stats.referrers.length) { %>
-      <div class="kv" style="margin-top:8px"><span>主要来源</span><b><%= stats.referrers[0].host %> · <%= stats.referrers[0].count %></b></div>
+      <div class="kv" style="margin-top:8px"><span>访客主要来自</span><b><%= stats.referrers[0].host %> · <%= stats.referrers[0].count %> 次</b></div>
       <% } %>
     </div>
   </section>
 
   <section class="panel">
-    <h2>热门页面</h2>
-    <div class="desc">近 7 天浏览最多的页面 · 已排除其他主机名</div>
+    <h2>大家爱看的页面</h2>
+    <div class="desc">最近7天看得最多的</div>
     <div class="table-wrap"><table class="table">
-      <thead><tr><th>页面路径</th><th>浏览量</th><th>占比</th><th>来源站点</th></tr></thead>
+      <thead><tr><th>页面</th><th>看了几次</th><th>占比</th></tr></thead>
       <tbody>
         <% if (!stats.topPages.length) { %>
-        <tr class="empty-row"><td colspan="4"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>近 7 天暂无页面浏览记录</td></tr>
+        <tr class="empty-row"><td colspan="3"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>近 7 天暂无页面浏览记录</td></tr>
         <% } else { %>
-        <% stats.topPages.forEach(function(p){ %>
+        <% stats.topPages.slice(0,3).forEach(function(p){ %>
         <tr>
           <td class="mono p" title="<%= p.path %>"><%= p.path %></td>
           <td class="mono"><%= p.count %></td>
           <td class="mono"><%= (p.count / Math.max(1, stats.days.reduce((s,d)=>s+d.count,0)) * 100).toFixed(1) %>%</td>
-          <td><%= stats.host %></td>
         </tr>
         <% }) %>
         <% } %>
       </tbody>
     </table></div>
-    <div class="foot"><span>数据实时拉取自 Cloudflare，不在本地伪造或补全</span><span>本地预览数据见 <a href="/dashboard" style="color:var(--accent);text-decoration:none">/dashboard</a></span></div>
+    <div class="foot"><span>数据都是真实的，没有编造</span></div>
   </section>
 
   <section class="panel">
-    <h2>流量来源</h2>
-    <div class="desc">近 7 天 Cloudflare refererHost · 按渠道自动归类；更细的 UTM、落地页与访客入口见 <a href="/monitor#sources" style="color:var(--accent);text-decoration:none">入口与安全监测</a></div>
+    <h2>访客从哪来</h2>
+    <div class="desc">看看大家是怎么找到你的</div>
     <% if (!stats.refRows.length) { %>
     <div class="empty-row" style="padding:24px 0;text-align:center;color:var(--faint);font-size:11.5px">近 7 天暂无来源数据</div>
     <% } else { %>
@@ -294,12 +339,48 @@
     </div>
     <% }) %>
     <% } %>
-    <div class="foot"><span>来源分类与 /monitor 使用同一套渠道字典</span><span>Cloudflare 只统计执行 JS 的浏览器</span></div>
+    
   </section>
   <% } %>
 </main>
 
 <script>
+/* ScrollFloat: split into chars and float them up when the band enters view */
+(function(){
+  var band = document.querySelector('.scroll-float-band');
+  var title = band && band.querySelector('[data-scroll-float]');
+  if (!band || !title) return;
+  var text = title.textContent.trim();
+  var chars = [];
+  title.textContent = '';
+  Array.from(text).forEach(function(ch, i){
+    var span = document.createElement('span');
+    span.className = 'sf-char';
+    span.textContent = ch === ' ' ? '\u00A0' : ch;
+    span.style.transitionDelay = (i * 0.03) + 's';
+    title.appendChild(span);
+    chars.push(span);
+  });
+  title.setAttribute('aria-label', text);
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    band.classList.add('is-visible');
+    return;
+  }
+  if (!('IntersectionObserver' in window)) {
+    band.classList.add('is-visible');
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  io.observe(band);
+})();
+
 document.getElementById('openSite').addEventListener('click', function(){
   window.open(<%- JSON.stringify(siteUrl) %>, '_blank');
 });

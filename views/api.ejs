@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f5f5f7">
-<title>API 数据 · Portfolio Admin</title>
+<title>数据接口 · Portfolio Admin</title>
 <%- include('theme-boot') %>
 <%- include('admin-style') %>
 </head>
@@ -17,15 +17,15 @@
   </div>
   <div class="nav-label">监测</div>
   <nav class="nav">
-    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>线上站点</a>
-    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
-    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地预览</a>
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>网站总览</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>访客详情</a>
+    <a href="/dashboard"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地数据</a>
   </nav>
   <div class="nav-label">系统</div>
   <nav class="nav">
-    <a class="on" href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
-    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
-    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+    <a class="on" href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>数据接口</a>
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>运行状况</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据设置</a>
   </nav>
   <div class="side-foot">
     <div class="live"><i></i>服务运行中</div>
@@ -35,21 +35,21 @@
 
 <main class="main">
   <header class="top">
-    <div class="crumb">系统 / <b>API 数据</b></div>
+    <div class="crumb">我的网站 / <b>数据接口</b></div>
     <div class="top-actions">
       <div class="badge <%= hasError ? 'warn' : '' %>"><i></i><%= hasError ? '1 项拉取失败' : '接口正常' %></div>
-      <button class="btn ghost" onclick="location.href='/health'">健康检查</button>
+      <button class="btn ghost" onclick="location.href='/health'">运行状况</button>
       <button class="btn" onclick="location.reload()">刷新响应</button>
     </div>
   </header>
 
   <div class="source-tabs">
-    <a href="/online">线上站点 · Cloudflare</a>
-    <a href="/monitor">入口与安全</a>
-    <a href="/dashboard">本地预览 · 埋点</a>
-    <a href="/health">健康检查</a>
-    <a class="on" href="/api-explorer">API 数据</a>
-    <a href="/setup">数据源配置</a>
+    <a href="/online">网站总览</a>
+    <a href="/monitor">访客详情</a>
+    <a href="/dashboard">本地数据</a>
+    <a class="on" href="/api-explorer">数据接口</a>
+    <a href="/health">运行状况</a>
+    <a href="/setup">数据设置</a>
   </div>
 
   <div class="health-hero <%= hasError ? 'bad' : '' %>" id="overview">
@@ -95,7 +95,7 @@
       <b>这一栏之前看起来像报错，是因为它直接打开了一整页裸 JSON。</b>
       现在改为可读控制台：接口状态、字段含义与格式化响应都在这里；需要原始数据时点「原始 JSON」或用 curl，接口返回的 JSON 契约没有改变。
       <% if (!cf.configured) { %>
-      目前 <code>/api/cloudflare</code> 返回 <code>ok:false</code> 只是因为 <code><%= cf.missing.join('、') %></code> 尚未填写，按 <a href="/online">线上站点页的四步引导</a> 配好后会自动变为真实数据；这一步不影响后台、埋点与统计接口。
+      目前 <code>/api/cloudflare</code> 返回 <code>ok:false</code> 只是因为 <code><%= cf.missing.join('、') %></code> 尚未填写，按 <a href="/online">网站总览页的四步引导</a> 配好后会自动变为真实数据；这一步不影响后台、埋点与统计接口。
       <% } else if (cf.error) { %>
       Cloudflare 凭证已配置，但本次拉取失败：<%= cf.error %>。其余接口不受影响。
       <% } else { %>
@@ -172,7 +172,7 @@ curl -s -X POST http://localhost:<%= port %>/api/track \
       <code>configured:false</code> + <code>missing</code> = <code>.env</code> 里还缺凭证；
       <code>error:null</code> = 没有异常，非 null 才是真正的错误；
       <code>status</code> = 明确的机器可读状态。
-      完整的实时检测结果见 <a href="/health">健康检查</a>。
+      完整的实时检测结果见 <a href="/health">运行状况</a>。
     </div>
   </div>
 </main>

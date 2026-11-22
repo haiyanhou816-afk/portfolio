@@ -13,44 +13,43 @@
 <aside class="side">
   <div class="logo">
     <div class="logo-mark">P</div>
-    <div><b>Portfolio Admin</b><small>管理后台 · v1.0</small></div>
+    <div><b>我的网站</b></div>
   </div>
-  <div class="nav-label">工作台</div>
+  <div class="nav-label">监测</div>
   <nav class="nav">
-    <a class="on" data-view="overview" href="#overview"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>仪表盘</a>
-    <a data-view="visits" href="#visits"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>访问记录</a>
-    <a data-view="users" href="#users"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M17 11a3 3 0 100-6M18 20c0-2.2-.8-3.8-2-4.8"/></svg>用户管理</a>
-    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>API 数据</a>
+    <a href="/online"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>网站总览</a>
+    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>访客详情</a>
+    <a class="on" data-view="overview" href="#overview"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>本地数据</a>
+    <a href="/api-explorer"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H5a2 2 0 00-2 2v3M16 4h3a2 2 0 012 2v3M8 20H5a2 2 0 01-2-2v-3M16 20h3a2 2 0 002-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>数据接口</a>
   </nav>
   <div class="nav-label">系统</div>
   <nav class="nav">
-    <a href="/monitor"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>入口与安全</a>
-    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>健康检查</a>
-    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据源配置</a>
+    <a href="/health"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>运行状况</a>
+    <a href="/setup"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>数据设置</a>
   </nav>
   <div class="side-foot">
-    <div class="live"><i></i>服务运行中</div>
-    端口 <%= stats.port %> · <%= stats.storageLabel %>
+    <div class="live"><i></i>网站正常</div>
+    数据实时同步
   </div>
 </aside>
 
 <main class="main">
   <header class="top">
-    <div class="crumb">工作台 / <b id="viewTitle">仪表盘</b></div>
+    <div class="crumb">我的网站 / <b id="viewTitle">本地数据</b></div>
     <div class="top-actions">
-      <div class="badge"><i></i>本地持久化</div>
+      <div class="badge"><i></i>本地数据</div>
       <button class="btn ghost" onclick="location.reload()">刷新</button>
-      <button class="btn" id="trackBtn">打开作品集</button>
+      <button class="btn" id="trackBtn">打开网站</button>
     </div>
   </header>
 
   <div class="source-tabs">
-    <a href="/online">线上站点 · Cloudflare</a>
-    <a href="/monitor">入口与安全</a>
-    <a class="on" href="/dashboard">本地预览 · 埋点</a>
-    <a href="/health">健康检查</a>
-    <a href="/api-explorer">API 数据</a>
-    <a href="/setup">数据源配置</a>
+    <a href="/online">网站总览</a>
+    <a href="/monitor">访客详情</a>
+    <a class="on" href="/dashboard">本地数据</a>
+    <a href="/api-explorer">数据接口</a>
+    <a href="/health">运行状况</a>
+    <a href="/setup">数据设置</a>
   </div>
 
   <!-- ───────── 视图 1：仪表盘 ───────── -->
@@ -76,7 +75,7 @@
         <div class="sub">取自服务端真实连接 IP</div>
       </div>
       <div class="stat">
-        <div class="label">注册用户 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg></span></div>
+        <div class="label">注册用户 <span><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></div>
         <div class="num mono" id="userStatNum"><%= stats.users %></div>
         <div class="sub"><a href="#users" data-go-view="users">前往用户管理</a></div>
       </div>
@@ -125,7 +124,7 @@
         <div class="kv"><span>存储模式</span><b class="pill"><%= stats.mode %></b></div>
         <div class="kv"><span>持久化位置</span><code><%= stats.dataFile %></code></div>
         <div class="kv"><span>页面渲染</span><b>EJS · layout</b></div>
-        <div class="kv"><span>健康检查</span><a href="/health" style="color:var(--accent);text-decoration:none">/health</a></div>
+        <div class="kv"><span>运行状况</span><a href="/health" style="color:var(--accent);text-decoration:none">/health</a></div>
         <div class="kv"><span>访问上报</span><code>POST /api/track</code></div>
         <div class="kv"><span>最后刷新</span><b class="mono" id="clock">--:--:--</b></div>
       </div>
@@ -199,7 +198,7 @@
           <thead><tr><th>#</th><th>用户名</th><th>状态</th></tr></thead>
           <tbody>
             <% if (!stats.userList.length) { %>
-            <tr class="empty-row"><td colspan="3"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.4 3-5.6 7-5.6s7 2.2 7 5.6"/></svg></div>还没有注册用户 · 用「添加用户」表单创建第一个</td></tr>
+            <tr class="empty-row"><td colspan="3"><div class="empty-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>还没有注册用户 · 用「添加用户」表单创建第一个</td></tr>
             <% } else { %>
             <% stats.userList.forEach(function(u, i){ %>
             <tr data-user-row>
@@ -237,7 +236,7 @@
 </main>
 
 <script>
-var LABELS = { overview: '仪表盘', visits: '访问记录', users: '用户管理' };
+var LABELS = { overview: '本地数据', visits: '访问记录', users: '用户管理' };
 function currentView() {
   var h = location.hash.slice(1);
   return LABELS[h] ? h : 'overview';
@@ -284,7 +283,7 @@ document.getElementById('trackBtn').addEventListener('click', function(){
   window.open(portfolioUrl, '_blank');
   const btn = this;
   btn.textContent = '已打开 · 请刷新';
-  setTimeout(() => { btn.textContent = '打开作品集'; }, 2500);
+  setTimeout(() => { btn.textContent = '打开网站'; }, 2500);
 });
 
 /* 访问记录：前端即时筛选，不请求后端 */

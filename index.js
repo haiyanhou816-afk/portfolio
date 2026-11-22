@@ -66,6 +66,18 @@ const SESSION_COOKIE = 'pa_session=' + SESSION_TOKEN + '; Path=/; Max-Age=259200
 function hasSession(req) {
   return String(req.headers.cookie || '').split(';').some(p => p.trim() === 'pa_session=' + SESSION_TOKEN);
 }
+/* 发布平台的网关会在分享链接校验通过后下发 __wb_rsc 会话 Cookie，并在转发时
+   消费掉 URL 上的 sharecode（应用侧读不到）。带该 Cookie 且经代理转发的请求，
+   说明已通过平台鉴权，应用侧放行并补种自己的 pa_session，
+   避免点站内导航（裸链接）时应用层误判为未登录而跳解锁页。 */
+function gatewayOk(req) {
+  /* 发布平台网关在分享码校验通过后，会剥离浏览器 Cookie 与 URL 上的 sharecode，
+     改为注入 x-wb-share-code 请求头透传给应用。该 header 由网关注入、客户端无法伪造，
+     其值等于配置的分享码即证明请求来自合法分享会话，放行并放行站内裸链接导航。 */
+  const hc = String(req.headers['x-wb-share-code'] || '').trim();
+  const publicShare = String(readEnv('PUBLIC_SHARECODE') || '').trim();
+  return !!(hc && publicShare && hc === publicShare);
+}
 function basicOk(req) {
   const header = String(req.headers.authorization || '');
   if (!header.startsWith('Basic ')) return false;
@@ -75,6 +87,16 @@ function basicOk(req) {
 }
 const PUBLIC_PATHS = new Set(['/', '/healthz', '/health', '/favicon.ico', '/online', '/unlock', '/api/unlock']);
 const INGEST_PATHS = new Set(['/api/track', '/api/edge-log']);
+/* 监测后台自身的页面与只读接口：管理员查看面板属于「查看统计」，不是访问作品集网站。
+   命中这些路径的正常浏览器浏览不计入入口请求，否则刷新面板计数就会 +1。
+   未知路径（/.env、/wp-admin 等扫描）、攻击 payload、爬虫 UA、高频抓取都不在此列，照常记录。 */
+const ADMIN_OWN_PATHS = new Set([
+  '/', '/favicon.ico', '/health', '/healthz', '/online', '/dashboard',
+  '/monitor', '/api-explorer', '/setup', '/unlock',
+  '/api/monitor', '/api/releases', '/api/store/export', '/api/cloudflare',
+  '/api/cloudflare/status', '/api/stats', '/api/track', '/api/edge-log',
+  '/api/register', '/api/login', '/api/me', '/api/unlock', '/api/config'
+]);
 
 /* 跨域策略：上报接口对线上作品集域名开放，本地预览照旧；预检直接 204 */
 app.use((req, res, next) => {
@@ -126,6 +148,12 @@ app.use((req, res, next) => {
     path: req.originalUrl, url: req.originalUrl, userAgent: ua,
     method: req.method, hitsPerMinute: hits, scope
   });
+  /* 后台自身的正常浏览不记入「入口请求」——面板数字只反映访问作品集网站的流量。
+     仅当：命中后台已知路径 + 判定为真人 + 非健康探针 + 未触发高频/攻击/扫描。
+     任何爬虫、自动化工具、可疑扫描、攻击 payload 或高频请求都不在此列，照常留痕。 */
+  const benignAdminView = ADMIN_OWN_PATHS.has(p) && c.kind === 'human'
+    && scope !== 'probe' && c.risk === 0 && hits <= 5;
+  if (benignAdminView) return next();
   const src = monitor.parseSource({
     referrer: req.headers.referer || '', url: req.originalUrl,
     siteHost: String(req.headers.host || '').split(':')[0], landing: p
@@ -153,9 +181,23 @@ app.use((req, res, next) => {
   /* 跨域预检必须无条件放行，否则线上作品集的 beacon 上报会被认证层挡在门外 */
   if (req.method === 'OPTIONS') return next();
   if (!ADMIN_PASSWORD) return next();
+  /* 平台分享码是合法通行证：带正确 sharecode 就放行并签发会话 Cookie。
+     放在白名单之前，确保首访 /?sharecode=xxx 也种下 Cookie；
+     之后点站内裸链接（不带参数）凭 Cookie 通行，不再误渲染解锁页。 */
+  const shareCode = String(req.query.sharecode || '').trim();
+  const publicShare = String(readEnv('PUBLIC_SHARECODE') || '').trim();
+  if (shareCode && publicShare && shareCode === publicShare) {
+    res.setHeader('Set-Cookie', SESSION_COOKIE);
+    return next();
+  }
   if (PUBLIC_PATHS.has(req.path)) return next();
   if (INGEST_PATHS.has(req.path) && req.method === 'POST') return next();
   if (privateDirect(req) || hasSession(req) || basicOk(req)) return next();
+  /* 经发布平台网关转发的会话（已带 __wb_rsc）视作已鉴权，补种应用 Cookie 后放行 */
+  if (gatewayOk(req)) {
+    res.setHeader('Set-Cookie', SESSION_COOKIE);
+    return next();
+  }
   if (req.query.access && String(req.query.access) === ADMIN_PASSWORD) {
     res.setHeader('Set-Cookie', SESSION_COOKIE);
     return next();
@@ -340,10 +382,23 @@ async function buildDashboardData() {
   return Object.assign({}, stats, { allVisits, userList });
 }
 
-/* 入口与安全监测：合并作品集埋点 + 本服务真实 HTTP 请求日志后统一分类聚合 */
+/* 入口与安全监测：合并作品集埋点 + 本服务真实 HTTP 请求日志后统一分类聚合。
+   历史请求里混入了管理员刷新 / 查看后台的正常浏览，只保留对后台的真实外部访问
+   （爬虫、扫描、攻击、探针、未知路径），避免把「看面板」算成「访问作品集」。 */
+function relevantRequests() {
+  return store.requests.filter(r => {
+    const p = String(r.path || '');
+    if (!ADMIN_OWN_PATHS.has(p)) return true;              // 未知/扫描路径，保留
+    if (r.scope === 'probe' || r.origin !== 'admin') return true; // 探针、非后台来源，保留
+    const kind = r.kind || 'human';
+    if (kind !== 'human') return true;                      // 爬虫/攻击/可疑，保留
+    if (Number(r.risk) > 0 || Number(r.hitsPerMinute) > 5) return true; // 有风险特征，保留
+    return false;                                           // 后台正常浏览，剔除
+  });
+}
 function buildMonitor() {
   return monitor.summarize({
-    visits: store.visits, requests: store.requests, releases: store.releases,
+    visits: store.visits, requests: relevantRequests(), releases: store.releases,
     siteHost: trackSiteHosts()
   });
 }
@@ -544,7 +599,7 @@ app.get('/', renderOnline);
 app.get('/dashboard', async (req, res) => {
   try {
     res.render('layout', {
-      title: '后台管理',
+      title: '我的网站 · 本地预览',
       body: '数据来源：作品集埋点 POST /api/track',
       stats: await buildDashboardData(),
       port: PORT
