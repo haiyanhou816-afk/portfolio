@@ -157,6 +157,15 @@ const QUERY = `query($account: String!, $site: String!, $start30: Date!, $start7
         count
         dimensions { refererHost }
       }
+      devices: rumPageloadEventsAdaptiveGroups(
+        limit: 10
+        filter: { siteTag: $site, date_geq: $start7, date_leq: $end }
+        orderBy: [count_DESC]
+      ) {
+        count
+        sum { visits }
+        dimensions { deviceType }
+      }
     }
   }
 }`;
@@ -166,9 +175,12 @@ const dayStr = d => new Date(d).toISOString().slice(0, 10);
 function emptyStats(c, error, missing) {
   const today = new Date();
   const days = [];
-  for (let i = 6; i >= 0; i--) {
+  const allDays = [];
+  for (let i = 29; i >= 0; i--) {
     const d = new Date(today.getTime() - i * 86400000);
-    days.push({ key: dayStr(d), label: `${d.getMonth() + 1}/${d.getDate()}`, count: 0 });
+    const row = { key: dayStr(d), label: `${d.getUTCMonth() + 1}/${d.getUTCDate()}`, count: 0, visits: 0 };
+    allDays.push(row);
+    if (i < 7) days.push(row);
   }
   const state = missing && missing.length ? 'not_configured' : (error ? 'error' : 'empty');
   const notes = {
@@ -181,8 +193,8 @@ function emptyStats(c, error, missing) {
     status: state, note: notes[state],
     configured: missing ? missing.length === 0 : true,
     missing: missing || [], error: error || null,
-    total: 0, visits: 0, today: 0, days, maxDay: 1,
-    topPages: [], referrers: [], fetchedAt: null
+    total: 0, visits: 0, today: 0, days, allDays, maxDay: 1, maxDay30: 1,
+    topPages: [], referrers: [], devices: [], fetchedAt: null
   };
 }
 
@@ -204,18 +216,21 @@ function shape(rows, c) {
   });
 
   const today = new Date();
-  const days = [];
+  const allDays = [];
   let total = 0, visits = 0;
   for (let i = 29; i >= 0; i--) {
     const key = dayStr(new Date(today.getTime() - i * 86400000));
     const v = byDate.get(key) || { count: 0, visits: 0 };
     total += v.count;
     visits += v.visits;
-    if (i < 7) {
-      const d = new Date(key + 'T00:00:00Z');
-      days.push({ key, label: `${d.getUTCMonth() + 1}/${d.getUTCDate()}`, count: v.count });
-    }
+    const d = new Date(key + 'T00:00:00Z');
+    allDays.push({
+      key, label: `${d.getUTCMonth() + 1}/${d.getUTCDate()}`,
+      count: v.count, visits: v.visits
+    });
   }
+  // 7 天视图沿用独立对象，避免与 30 天视图共享引用后被意外改写
+  const days = allDays.slice(-7).map(d => ({ key: d.key, label: d.label, count: d.count }));
 
   const topPages = (a.paths || []).filter(matchHost).map(r => ({
     path: r.dimensions.requestPath || '/', count: r.count || 0
@@ -225,13 +240,24 @@ function shape(rows, c) {
     host: r.dimensions.refererHost || '直接访问', count: r.count || 0
   })).sort((x, y) => y.count - x.count).slice(0, 5);
 
+  // 设备类型：Cloudflare RUM 真实维度（mobile / desktop / tablet）
+  const DEVICE_LABELS = { mobile: '手机', desktop: '电脑', tablet: '平板' };
+  const devices = (a.devices || []).map(r => {
+    const raw = (r.dimensions && r.dimensions.deviceType) || 'other';
+    return {
+      type: raw, label: DEVICE_LABELS[raw] || '其他设备',
+      count: r.count || 0, visits: (r.sum && r.sum.visits) || 0
+    };
+  }).sort((x, y) => y.count - x.count);
+
   return {
     source: 'cloudflare', host: c.host, ok: true,
     status: 'ok', note: '已从 Cloudflare GraphQL Analytics API 拉取真实浏览器 beacon 数据，并按 requestHost 过滤。',
     configured: true, missing: [], error: null,
     total, visits, today: days[6] ? days[6].count : 0,
-    days, maxDay: Math.max(1, ...days.map(d => d.count)),
-    topPages, referrers, fetchedAt: new Date()
+    days, allDays, maxDay: Math.max(1, ...days.map(d => d.count)),
+    maxDay30: Math.max(1, ...allDays.map(d => d.count)),
+    topPages, referrers, devices, fetchedAt: new Date()
   };
 }
 

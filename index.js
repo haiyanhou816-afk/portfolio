@@ -575,6 +575,44 @@ function withShare(req, url) {
   return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'sharecode=' + encodeURIComponent(sc) + hash;
 }
 
+/* 异常提醒：只用完整自然日做比较，避免今天还没过完就误报。
+   覆盖三种情况：数据源断开、昨天访问量骤降/暴涨、出现可疑请求。 */
+function buildAlerts(cf, overview) {
+  const out = [];
+  if (!cf.ok) {
+    out.push({
+      level: 'bad', title: '数据源断开了',
+      text: cf.configured ? (cf.error || '这次没从 Cloudflare 取到数据')
+        : 'Cloudflare 凭证还没填好，现在没有真实数字',
+      href: '/setup', action: '去配置'
+    });
+  }
+  const full = (cf.allDays || cf.days || []).slice(0, -1); // 去掉今天（未过完）
+  if (full.length >= 7) {
+    const yesterday = full[full.length - 1];
+    const prev = full.slice(-7, -1);
+    const avg = prev.reduce((s, d) => s + d.count, 0) / Math.max(1, prev.length);
+    if (avg > 0 && yesterday.count < avg * 0.5) {
+      out.push({
+        level: 'bad', title: '访问量突然变少了',
+        text: `昨天 ${yesterday.count} 次，前面 6 天平均 ${Math.round(avg)} 次，少了 ${Math.round((1 - yesterday.count / avg) * 100)}%`
+      });
+    } else if (avg > 0 && yesterday.count > avg * 2) {
+      out.push({
+        level: 'warn', title: '访问量突然变多了',
+        text: `昨天 ${yesterday.count} 次，前面 6 天平均 ${Math.round(avg)} 次`
+      });
+    }
+  }
+  if (overview && overview.threats > 0) {
+    out.push({
+      level: 'warn', title: '有可疑访问',
+      text: `记录到 ${overview.threats} 次可疑请求`, href: '/monitor', action: '去看看'
+    });
+  }
+  return out;
+}
+
 /* 根路径直接渲染监测页，不再 302：平台会消费 URL 上的 sharecode，
    跳转后的 /online 既无参数又可能没带上会话 Cookie，会被网关判为「链接不完整」403 而白屏。
    取消第二跳后，首屏即 200，平台同时下发会话 Cookie。 */
@@ -582,9 +620,11 @@ async function renderOnline(req, res) {
   try {
     const cf = await cloudflare.getStats(req.query.refresh === '1');
     const view = Object.assign({}, cf, { refRows: classifyReferrers(cf) });
+    const ov = monitor.publicOverview(buildMonitor());
     res.render('online', {
       stats: view,
-      overview: monitor.publicOverview(buildMonitor()),
+      overview: ov,
+      alerts: buildAlerts(cf, ov),
       port: PORT
     });
   } catch (err) {
@@ -774,6 +814,32 @@ app.get('/api/cloudflare/status', (req, res) => {
   const s = cloudflare.status();
   if (!wantsJson(req)) return res.redirect(withShare(req, '/api-explorer#cf-status'));
   res.json(s);
+});
+
+/* 把 30 天真实数据导出为 CSV。UTF-8 BOM 让 Excel 直接打开不乱码。
+   只导出聚合统计（日期/页面/设备），不含访客 IP 或 UA 明细。 */
+app.get('/api/export.csv', async (req, res) => {
+  try {
+    const cf = await cloudflare.getStats(false);
+    const rows = [['日期', '浏览量', '会话数']];
+    (cf.allDays || cf.days || []).forEach(d => {
+      rows.push([d.key, d.count, d.visits == null ? '' : d.visits]);
+    });
+    rows.push([]);
+    rows.push(['页面', '浏览量']);
+    (cf.topPages || []).forEach(p => rows.push([p.path, p.count]));
+    rows.push([]);
+    rows.push(['设备', '浏览量']);
+    (cf.devices || []).forEach(d => rows.push([d.label, d.count]));
+    const csv = '\uFEFF' + rows.map(r =>
+      r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')
+    ).join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="monitor-30d.csv"');
+    res.send(csv);
+  } catch (err) {
+    res.status(500).type('text/plain').send('导出失败：' + err.message);
+  }
 });
 
 /* /healthz：浏览器得到可读的健康页；curl / 监控程序仍拿 JSON（向后兼容）
