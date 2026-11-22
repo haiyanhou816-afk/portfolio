@@ -194,7 +194,7 @@ function emptyStats(c, error, missing) {
     configured: missing ? missing.length === 0 : true,
     missing: missing || [], error: error || null,
     total: 0, visits: 0, today: 0, days, allDays, maxDay: 1, maxDay30: 1,
-    topPages: [], referrers: [], devices: [], fetchedAt: null
+    topPages: [], referrers: [], devices: [], weekdays: [], fetchedAt: null
   };
 }
 
@@ -240,6 +240,18 @@ function shape(rows, c) {
     host: r.dimensions.refererHost || '直接访问', count: r.count || 0
   })).sort((x, y) => y.count - x.count).slice(0, 5);
 
+  // 星期热力：按 30 天 allDays 聚合到周一~周日，完全复用已拉取的数据，不额外请求
+  const WEEK_LABELS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const weekdays = WEEK_LABELS.map(label => ({ label, count: 0, days: 0 }));
+  allDays.forEach(d => {
+    // Date 以 UTC 构造，getUTCDay(): 0=周日 → 映射到数组末尾(6)，其余 1~6 → 0~5
+    const idx = new Date(d.key + 'T00:00:00Z').getUTCDay();
+    const slot = weekdays[idx === 0 ? 6 : idx - 1];
+    slot.count += d.count || 0;
+    if (d.count > 0) slot.days += 1;
+  });
+  const weekMax = Math.max(1, ...weekdays.map(w => w.count));
+
   // 设备类型：Cloudflare RUM 真实维度（mobile / desktop / tablet）
   const DEVICE_LABELS = { mobile: '手机', desktop: '电脑', tablet: '平板' };
   const devices = (a.devices || []).map(r => {
@@ -257,7 +269,7 @@ function shape(rows, c) {
     total, visits, today: days[6] ? days[6].count : 0,
     days, allDays, maxDay: Math.max(1, ...days.map(d => d.count)),
     maxDay30: Math.max(1, ...allDays.map(d => d.count)),
-    topPages, referrers, devices, fetchedAt: new Date()
+    topPages, referrers, devices, weekdays, weekMax, fetchedAt: new Date()
   };
 }
 
