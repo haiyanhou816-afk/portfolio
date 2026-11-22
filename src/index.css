@@ -1585,10 +1585,21 @@ section:not([id="strengths"]):not(#projects):not(#portfolio):not(#about):not(#co
   50% { opacity: .4; transform: scale(.7); }
 }
 
-@media (max-width: 760px) {
-  /* 触屏没有 hover，但体感开启后交互层需要正常显形 */
+@media (hover: none) {
+  /* 手机端：整张图常驻静态 mosaic —— 去掉局部光斑 mask，全图显形 */
   .avatar-spotlight {
     cursor: default;
+  }
+
+  .avatar-spotlight__ascii {
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* 静态马赛克不需要光斑高光，避免叠加把格子洗白 */
+  .avatar-spotlight__sheen {
+    display: none;
   }
 }
 

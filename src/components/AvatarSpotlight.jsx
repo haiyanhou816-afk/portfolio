@@ -11,16 +11,47 @@ import AsciiVignetteBloom from "./AsciiVignetteBloom";
  *     通过跟随"指针"的径向 mask 只在交互处显形
  *  3. 光泽层：斜向高光，随指针移动，给"封面"那种印刷质感
  *
- * 桌面：鼠标位置 → 光斑位置 + rotateX/rotateY 倾斜。
- * 手机：点按钮开启体感后，DeviceOrientation 的 beta/gamma 相对
- *       开启瞬间的姿态取增量，映射成同一组 0~1 的虚拟指针坐标，
- *       因此手机往右倾 = 光斑往右走，往前/后倾 = 光斑上下走。
- *       倾斜方向和桌面保持同一套直觉（往哪边推就往哪边倒）。
+ * 桌面：鼠标位置 → 局部光斑显形 + 轻微 rotateX/rotateY 倾斜。
+ * 手机：整张图常驻静态 mosaic（像截图那样，格子不循环闪动），
+ *       点按钮授权后，DeviceOrientation 的 beta/gamma 相对开启瞬间
+ *       的姿态取增量，映射成虚拟指针坐标驱动整块画面的 3D 倾斜，
+ *       倾斜幅度比桌面更大。手机往右倾 = 画面右边抬起。
  *
  * ASCII canvas 常驻挂载而不是 hover 时才创建，避免每次进入都重新
  * 解码图片 + 重建离屏采样，那会有明显的一帧空白。
  */
 const FULL_TILT = 26; // 倾斜多少度到达图片边缘
+const DESKTOP_TILT_DEG = 14; // 桌面最大 3D 倾斜 ±7deg
+const MOBILE_TILT_DEG = 30; // 手机幅度加大，最大 ±15deg
+
+// 手机端：全图静态马赛克，关闭 wave 动画（否则格子明暗循环闪动）
+const MOBILE_MOSAIC_CONFIG = {
+  bgMode: "solid",
+  cellSize: 12,
+  brightness: 10,
+  contrast: 122,
+  saturation: 78,
+  animated: false,
+  animIntensity: { enabled: false, intensity: 0 },
+  pfx: {
+    vignette: { enabled: true, intensity: 18 },
+    bloom: { enabled: false, intensity: 0 },
+  },
+};
+
+// 桌面端：局部光斑显形 + 打印质感高光
+const DESKTOP_SPOTLIGHT_CONFIG = {
+  bgMode: "none",
+  cellSize: 11,
+  brightness: 10,
+  contrast: 122,
+  saturation: 78,
+  pfx: {
+    vignette: { enabled: true, intensity: 30 },
+    bloom: { enabled: true, intensity: 28 },
+  },
+  animIntensity: { enabled: true, intensity: 52 },
+};
 
 export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt, lang = "zh" }) {
   const z = lang === "zh";
@@ -28,6 +59,7 @@ export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt, lang 
   const rafRef = useRef(0);
   const pendingRef = useRef(null);
   const baseRef = useRef(null); // 体感基准姿态 { beta, gamma }
+  const touchDeviceRef = useRef(false); // 给 applyPointer 用，避免回调依赖 state 反复重建
   const [hovering, setHovering] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [gyroStatus, setGyroStatus] = useState("idle"); // idle | on | denied | unsupported
@@ -43,7 +75,9 @@ export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt, lang 
   }, []);
 
   useEffect(() => {
-    setTouchDevice(window.matchMedia?.("(hover: none)")?.matches ?? false);
+    const isTouch = window.matchMedia?.("(hover: none)")?.matches ?? false;
+    touchDeviceRef.current = isTouch;
+    setTouchDevice(isTouch);
   }, []);
 
   // 虚拟指针位置只写 CSS 变量，不进 React state：
@@ -59,9 +93,10 @@ export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt, lang 
     node.style.setProperty("--spot-y", `${y * 100}%`);
 
     if (!reduceMotion) {
-      // 中心为 0，边缘约 ±7deg；y 轴取反才符合"往哪边推就往哪边倒"的直觉
-      const tiltY = (x - 0.5) * 14;
-      const tiltX = (0.5 - y) * 14;
+      // 中心为 0，边缘到达各自幅度；y 轴取反才符合"往哪边推就往哪边倒"的直觉
+      const amp = touchDeviceRef.current ? MOBILE_TILT_DEG : DESKTOP_TILT_DEG;
+      const tiltY = (x - 0.5) * amp;
+      const tiltX = (0.5 - y) * amp;
       node.style.setProperty("--tilt-x", `${tiltX.toFixed(2)}deg`);
       node.style.setProperty("--tilt-y", `${tiltY.toFixed(2)}deg`);
     }
@@ -205,7 +240,8 @@ export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt, lang 
     [handleOrientation]
   );
 
-  const active = hovering || gyroStatus === "on";
+  // 手机端全图 mosaic 常驻显形；桌面端靠 hover / 体感触发局部光斑
+  const active = touchDevice || hovering || gyroStatus === "on";
   const gyroLabel =
     gyroStatus === "on"
       ? z
@@ -240,18 +276,7 @@ export default function AvatarSpotlight({ src = asset("/avatar.jpg"), alt, lang 
             src={src}
             bgColor="transparent"
             paused={!active}
-            config={{
-              bgMode: "none",
-              cellSize: 11,
-              brightness: 10,
-              contrast: 122,
-              saturation: 78,
-              pfx: {
-                vignette: { enabled: true, intensity: 30 },
-                bloom: { enabled: true, intensity: 28 },
-              },
-              animIntensity: { enabled: true, intensity: 52 },
-            }}
+            config={touchDevice ? MOBILE_MOSAIC_CONFIG : DESKTOP_SPOTLIGHT_CONFIG}
           />
         </div>
 
