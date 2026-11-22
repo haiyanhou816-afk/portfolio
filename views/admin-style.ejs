@@ -619,6 +619,42 @@ pre.json,pre.curl{background:rgba(255,255,255,.02)!important;box-shadow:inset 0 
 .ov-strip .ov-card:nth-child(5){display:none!important}
 .grid{grid-template-columns:repeat(3,1fr)!important}
 .grid .stat:nth-child(4){display:none!important}
+/* LIGHT-THEME-ENABLE · 上面的极简覆盖把所有主题都锁成纯黑，
+   这里给浅色模式单独一组高优先级规则，让「深浅色切换」真正生效；夜间外观保持原样。 */
+html[data-theme="light"]{
+  --ink:#1d1d1f!important;--ink-2:#424245!important;--muted:#6e6e73!important;--faint:#86868b!important;
+  --line:rgba(0,0,0,.09)!important;--line-soft:rgba(0,0,0,.055)!important;
+  --bg:#f5f5f7!important;--card:#ffffff!important;--side-bg:#ffffff!important;--pop-bg:#ffffff!important;
+  --accent:#0071e3!important;--accent-ink:#0058b0!important;--accent-soft:rgba(0,113,227,.10)!important;
+  --accent-faint:rgba(0,113,227,.055)!important;--on-accent:#ffffff!important;
+  --fill-0:rgba(0,0,0,.018)!important;--fill-1:rgba(0,0,0,.04)!important;
+  --fill-2:rgba(0,0,0,.05)!important;--fill-3:rgba(0,0,0,.055)!important;--fill-4:rgba(0,0,0,.09)!important;
+  --grid-line:rgba(0,0,0,.04)!important;
+}
+html,html[data-theme="light"] body{background:#f5f5f7!important}
+html[data-theme="light"] .side{background:#ffffff!important;border-right-color:rgba(0,0,0,.07)!important}
+html[data-theme="light"] .stat,html[data-theme="light"] .panel,html[data-theme="light"] .ov-card,
+html[data-theme="light"] .guide,html[data-theme="light"] .check-card,html[data-theme="light"] .preview-strip,
+html[data-theme="light"] .json-card,html[data-theme="light"] .health-hero{border-bottom-color:rgba(0,0,0,.08)!important}
+html[data-theme="light"] .stat:hover,html[data-theme="light"] .panel:hover{border-bottom-color:rgba(0,0,0,.2)!important}
+html[data-theme="light"] .stat .num{color:#1d1d1f!important}
+html[data-theme="light"] .stat .label span{box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)!important;color:#424245!important}
+html[data-theme="light"] .side .nav a.on,html[data-theme="light"] .source-tabs a.on,
+html[data-theme="light"] .tp-seg button.on{background:#1d1d1f!important;color:#ffffff!important}
+html[data-theme="light"] .chart .bar{background:#8a8a93!important}
+html[data-theme="light"] .chart .bar.today,html[data-theme="light"] .chart-legend .today i{background:#1d1d1f!important}
+html[data-theme="light"] .chart-legend i{background:#8a8a93!important}
+html[data-theme="light"] .pill,html[data-theme="light"] .ep-method,html[data-theme="light"] .ref-tag.ok,
+html[data-theme="light"] .ref-tag.info,html[data-theme="light"] .ref-tag.violet,html[data-theme="light"] .hr-tag,
+html[data-theme="light"] .ep-tag,html[data-theme="light"] .mini-btn.primary{background:rgba(0,0,0,.05)!important;color:#424245!important}
+html[data-theme="light"] .notice{background:rgba(0,0,0,.035)!important}
+html[data-theme="light"] .notice svg{color:#86868b!important}
+html[data-theme="light"] .btn:not(.ghost){background:#1d1d1f!important;color:#ffffff!important}
+html[data-theme="light"] .btn.ghost{box-shadow:inset 0 0 0 1px rgba(0,0,0,.16)!important}
+html[data-theme="light"] .logo-mark{color:#1d1d1f!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28)!important}
+html[data-theme="light"] .badge i,html[data-theme="light"] .side-foot .live i{background:#86868b!important}
+html[data-theme="light"] pre.json,html[data-theme="light"] pre.curl{background:rgba(0,0,0,.02)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)!important}
+html[data-theme="light"] #dotgrid-bg{opacity:.5!important}
 </style>
 
 

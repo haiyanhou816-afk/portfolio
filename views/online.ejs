@@ -113,6 +113,20 @@
   font-size:11px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--ink);
 }
 .week-cell .wl{font-size:10px;color:var(--faint)}
+/* 分享卡片：扫码打开作品集 */
+.share-mask{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.share-mask[hidden]{display:none}
+.share-card{width:min(360px,100%);background:var(--card);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.45);padding:26px 24px 22px;text-align:center;position:relative;animation:pop .22s ease}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.share-card .sc-close{position:absolute;top:12px;right:14px;border:0;background:transparent;color:var(--faint);font-size:22px;line-height:1;cursor:pointer}
+.share-card h3{margin:0 0 4px;font-size:16px;font-weight:650;color:var(--ink)}
+.share-card .sc-sub{margin:0 0 18px;font-size:11.5px;color:var(--muted)}
+.share-qr{display:inline-flex;padding:14px;border-radius:14px;background:#fff;line-height:0}
+.share-qr svg{width:180px;height:180px;display:block}
+.share-qr.empty{width:180px;height:180px;align-items:center;justify-content:center;color:#999;font-size:12px;line-height:1.5}
+.share-url{margin:16px 0 14px;font-size:11px;color:var(--muted);word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.share-acts{display:flex;gap:8px}
+.share-acts .btn{flex:1;height:38px;font-size:12.5px}
 @media(max-width:720px){
   .toolbar{flex-direction:column;align-items:center;gap:10px;text-align:center}
   .seg{align-self:center}
@@ -152,8 +166,9 @@
     <div class="crumb">我的网站 · 访问情况</div>
     <div class="top-actions">
       <div class="badge <%= stats.ok ? '' : 'warn' %>"><i></i><%= stats.ok ? '数据正常' : (stats.configured ? '拉取失败' : '等待配置') %></div>
+      <button class="btn ghost" id="quickTheme" type="button" title="切换深浅色">深浅色</button>
       <button class="btn ghost" onclick="location.reload()">刷新</button>
-      <button class="btn" id="openSite">打开网站</button>
+      <button class="btn" id="openSite">分享网站</button>
     </div>
   </header>
 
@@ -456,6 +471,25 @@
   <% } %>
 </main>
 
+<!-- 分享卡片：扫码打开作品集 -->
+<div class="share-mask" id="shareMask" hidden>
+  <div class="share-card" role="dialog" aria-modal="true" aria-label="分享作品集">
+    <button class="sc-close" id="shareClose" type="button" aria-label="关闭">×</button>
+    <h3>扫码打开作品集</h3>
+    <p class="sc-sub">手机扫一扫，或复制地址发给朋友</p>
+    <% if (shareQr) { %>
+    <div class="share-qr"><%- shareQr %></div>
+    <% } else { %>
+    <div class="share-qr empty">二维码<br>暂时不可用</div>
+    <% } %>
+    <div class="share-url"><%= siteUrl %></div>
+    <div class="share-acts">
+      <button class="btn ghost" id="copyUrl" type="button">复制地址</button>
+      <button class="btn" id="goSite" type="button">直接打开</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ScrollFloat: split into chars and float them up when the band enters view */
 (function(){
@@ -518,9 +552,44 @@
   apply('7');
 })();
 
-document.getElementById('openSite').addEventListener('click', function(){
-  window.open(<%- JSON.stringify(siteUrl) %>, '_blank');
-});
+/* 分享卡片：点「分享网站」弹出二维码，支持复制地址 / 直接打开 / 点遮罩关闭 */
+(function(){
+  var SITE_URL = <%- JSON.stringify(siteUrl) %>;
+  var mask = document.getElementById('shareMask');
+  var openBtn = document.getElementById('openSite');
+  if(!mask || !openBtn) return;
+  function close(){ mask.hidden = true; }
+  openBtn.addEventListener('click', function(){ mask.hidden = false; });
+  document.getElementById('shareClose').addEventListener('click', close);
+  mask.addEventListener('click', function(e){ if(e.target === mask) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+  document.getElementById('goSite').addEventListener('click', function(){ window.open(SITE_URL, '_blank'); });
+  document.getElementById('copyUrl').addEventListener('click', function(){
+    var btn = document.getElementById('copyUrl');
+    function done(){ btn.textContent = '已复制 ✓'; setTimeout(function(){ btn.textContent = '复制地址'; }, 1600); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(SITE_URL).then(done, fallback);
+    } else fallback();
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = SITE_URL; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent = '复制失败'; }
+      document.body.removeChild(ta);
+    }
+  });
+})();
+
+/* 深浅色快速切换：复用页面内置的外观引擎 PortfolioTheme，点一下在日间/夜间之间切换 */
+(function(){
+  var b = document.getElementById('quickTheme');
+  if(!b) return;
+  b.addEventListener('click', function(){
+    var T = window.PortfolioTheme;
+    if(!T){ location.reload(); return; }
+    T.set({ mode: T.dark ? 'light' : 'night' });
+  });
+})();
 
 /* 刷新按钮：带上当前 sharecode 与 refresh=1，强制后端绕过缓存重新拉取；
    刷新中禁用按钮，避免连点。 */

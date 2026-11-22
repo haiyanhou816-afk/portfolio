@@ -15,6 +15,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cloudflare = require('./cloudflare');
 const monitor = require('./monitor');
+const QRCode = require('qrcode');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
@@ -621,10 +622,21 @@ async function renderOnline(req, res) {
     const cf = await cloudflare.getStats(req.query.refresh === '1');
     const view = Object.assign({}, cf, { refRows: classifyReferrers(cf) });
     const ov = monitor.publicOverview(buildMonitor());
+    /* 分享卡片二维码：指向作品集线上地址，白底黑码保证任何主题下都能扫。
+       生成失败不影响页面主体，降级为空字符串让卡片显示提示。 */
+    let shareQr = '';
+    try {
+      shareQr = await QRCode.toString(cloudflare.config().portfolioUrl, {
+        type: 'svg', margin: 1, width: 220,
+        color: { dark: '#111114ff', light: '#ffffffff' },
+        errorCorrectionLevel: 'M'
+      });
+    } catch (err) { console.warn('[qr] 生成失败：', err.message); }
     res.render('online', {
       stats: view,
       overview: ov,
       alerts: buildAlerts(cf, ov),
+      shareQr: shareQr,
       port: PORT
     });
   } catch (err) {
