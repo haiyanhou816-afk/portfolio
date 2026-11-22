@@ -583,5 +583,11 @@ export default function AsciiVignetteBloom({
     else loop.start?.();
   }, [paused]);
 
+  // 静态模式（animated:false 或 reduce-motion）下没有动画循环，
+  // reveal 逐格揭示进度变化时需要主动补画一帧，否则网格永远停在空态。
+  useEffect(() => {
+    loopRef.current.redraw?.();
+  }, [reveal]);
+
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }

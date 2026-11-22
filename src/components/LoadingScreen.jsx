@@ -7,70 +7,56 @@ export default function LoadingScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    let imageReady = false;
-    let minTimeReady = false;
     let completed = false;
-    const image = new Image();
-    const startedAt = performance.now();
-    // 最短展示时长：原为 4200ms 太拖，1100ms 又来不及看清逐格揭示动画。
-    // 折中到 1800ms，配合图片预载，网格能完整铺开又不让人久等。
-    const minDuration = 1800;
-    let frameId;
-    let completeTimeoutId;
-    let imageTimeoutId;
+    const startedAt = Date.now();
+    // 最短展示 1700ms：够看清逐格揭示，又不让人久等。
+    const minDuration = 1700;
+    let exitTimeoutId;
+    const tickIds = [];
 
-    const complete = () => {
-      if (completed || !imageReady || !minTimeReady) return;
-      completed = true;
-      setProgress(100);
-      completeTimeoutId = window.setTimeout(onComplete, 320);
-    };
-
-    const markImageReady = () => {
-      if (imageReady || image.naturalWidth === 0) return;
-      imageReady = true;
-      complete();
-    };
-
-    image.onload = markImageReady;
-    image.onerror = () => {
-      imageReady = true; // 图片失败也放行，别让加载页卡住
-      complete();
-    };
-    image.src = asset("/hero-bg.jpg");
-    // 部分 WebView 不触发 onload，decode() 却可用；不等回调，直接解码
-    if (typeof image.decode === "function") {
-      image.decode().then(markImageReady).catch(() => {});
-    }
-
-    /* 兜底：弱网下图片请求可能一直挂着、连 onerror 都不触发。上面两个条件缺一个，
-       加载页就会永远停在 096%。这里最多等 3000ms 强制放行，保证网站一定能进。 */
-    imageTimeoutId = window.setTimeout(() => {
+    /*
+     * 关键：进度用 setTimeout 按时间戳推进，不再依赖 requestAnimationFrame。
+     * 微信/手机内置浏览器在开屏阶段、息屏或切后台时会暂停 rAF，
+     * 之前进度就永远卡在截图里的 049%。setTimeout 虽也会被节流，
+     * 但配合下面的硬超时兜底，一定能走到头。
+     */
+    const finish = () => {
       if (completed) return;
-      imageReady = true;
-      minTimeReady = true;
-      complete();
-    }, 3000);
-
-    const tick = (now) => {
-      const elapsed = Math.min((now - startedAt) / minDuration, 1);
-      // 近线性 + 尾段减速：全程匀速爬升，最后 15% 放慢一半，结尾正好收在 96%
-      const eased = elapsed < 0.85 ? elapsed * 1.08 : 1.08 * 0.85 + (elapsed - 0.85) * 0.547;
-      setProgress(Math.min(96, Math.round(Math.min(eased, 1) * 96)));
-
-      if (elapsed < 1) {
-        frameId = requestAnimationFrame(tick);
-      } else {
-        minTimeReady = true;
-        complete();
-      }
+      completed = true;
+      tickIds.forEach((id) => window.clearTimeout(id));
+      setProgress(100);
+      exitTimeoutId = window.setTimeout(onComplete, 300);
     };
 
-    frameId = requestAnimationFrame(tick);
+    const advance = () => {
+      if (completed) return;
+      const elapsed = Math.min((Date.now() - startedAt) / minDuration, 1);
+      // 近线性 + 尾段减速：结尾正好收在 96%，到点由 finish 补到 100
+      const eased =
+        elapsed < 0.85 ? elapsed * 1.08 : 1.08 * 0.85 + (elapsed - 0.85) * 0.547;
+      setProgress(Math.min(96, Math.round(Math.min(eased, 1) * 96)));
+      if (elapsed >= 1) {
+        finish();
+        return;
+      }
+      tickIds.push(window.setTimeout(advance, 60));
+    };
+    advance();
+
+    // 硬超时兜底：无论 rAF/定时器是否被节流，最多 2600ms 强制放行，
+    // 保证网站一定能进，绝不出现加载不完卡死。
+    tickIds.push(window.setTimeout(finish, 2600));
+
+    // 页面从后台回到前台时若已超时，立刻结束，避免继续转圈。
+    const onVisible = () => {
+      if (!document.hidden && Date.now() - startedAt >= minDuration) finish();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
-      cancelAnimationFrame(frameId);
-      window.clearTimeout(completeTimeoutId);
-      window.clearTimeout(imageTimeoutId);
+      tickIds.forEach((id) => window.clearTimeout(id));
+      window.clearTimeout(exitTimeoutId);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [onComplete]);
 
@@ -110,7 +96,13 @@ export default function LoadingScreen({ onComplete }) {
           edgeFade={0.42}
           /* 网格随进度逐格铺开，在 78% 处就铺满，留一段完整形态给用户看 */
           reveal={gridReveal < 1 ? gridReveal : null}
-          config={{ bgMode: "none" }}
+          /* 静态网格：逐格揭示到位后保持静止，不做 wave 循环闪动 */
+          config={{
+            bgMode: "none",
+            animated: false,
+            animIntensity: { enabled: false, intensity: 0 },
+            pfx: { vignette: { enabled: true, intensity: 24 }, bloom: { enabled: false, intensity: 0 } },
+          }}
         />
       </div>
 

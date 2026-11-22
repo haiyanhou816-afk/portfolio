@@ -22,7 +22,7 @@ import AsciiVignetteBloom from "./AsciiVignetteBloom";
  */
 const FULL_TILT = 26; // 倾斜多少度到达图片边缘
 const DESKTOP_TILT_DEG = 14; // 桌面最大 3D 倾斜 ±7deg
-const MOBILE_TILT_DEG = 30; // 手机幅度加大，最大 ±15deg
+const MOBILE_TILT_DEG = 48; // 手机幅度加大，最大 ±24deg
 
 // 手机端：全图静态马赛克，关闭 wave 动画（否则格子明暗循环闪动）
 const MOBILE_MOSAIC_CONFIG = {
